@@ -6,8 +6,7 @@ const userSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: {type: String, required: true},
   incomes: [{type: mongoose.Schema.Types.ObjectId, ref: 'incomes', default: []}],
-  spents: [{type: mongoose.Schema.Types.ObjectId, ref: 'spents', default: []}],
-  money: {type: Number, default: 0}
+  spents: [{type: mongoose.Schema.Types.ObjectId, ref: 'spents', default: []}]
 }, { timestamps: true });
 
 export default mongoose.model('users', userSchema);

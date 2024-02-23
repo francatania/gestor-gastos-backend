@@ -2,10 +2,9 @@ import { Router } from 'express';
 import SpentController from '../controller/spent.controller.js';
 import passport from 'passport';
 
-
 const router = Router();
 
-router.get('/spents', passport.authenticate('jwt',{session:false} ), async (req, res)=>{
+router.get('/spents', passport.authenticate('jwt',{session:false} ),  async (req, res)=>{
     // const {id} = req.body;
 
     try {

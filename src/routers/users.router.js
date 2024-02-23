@@ -4,6 +4,29 @@ import mongoose from 'mongoose';
 
 const router = Router();
 
+router.post('/users', async(req, res, next)=>{
+  const  {
+    first_name,
+    last_name,
+    email,
+    password,
+  } = req.body
+
+  const data = {
+    first_name,
+    last_name,
+    email,
+    password,
+  }
+
+  try {
+    await UserController.register(data);
+    res.status(200).json({message: "Se creó el usuario."})
+  } catch (error) {
+    res.status(400).json({message: error.message})
+  }
+})
+
 router.get('/users', async (req, res, next) => {
   try {
     const users = await UserController.getUsers({})
