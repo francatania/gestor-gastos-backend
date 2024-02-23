@@ -10,6 +10,10 @@ export default class IncomeDAO{
         return await incomeModel.findOne({_id: id});
     }
 
+    static async getByUser(user){
+        return await incomeModel.find({ userId: { $in: user } })
+    }
+
     static async get(){
         return await incomeModel.find();
     }

@@ -39,6 +39,10 @@ export default class IncomeController{
             throw error;
         }
     }
+
+    static async getIncomesByUser(id){
+        return await IncomeDao.getByUser(id);
+    }   
     
 
 }
