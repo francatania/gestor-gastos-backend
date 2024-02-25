@@ -41,8 +41,12 @@ export default class IncomeController{
     }
 
     static async getIncomesByUser(id){
-        return await IncomeDao.getByUser(id);
+        return await IncomeDAO.getByUser(id);
     }   
+
+    static async getIncomesByDateRange(start, end, id){
+        return await IncomeDAO.getByDateRange(start, end, id);
+    }
     
 
 }

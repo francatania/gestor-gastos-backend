@@ -28,6 +28,21 @@ router.get('/incomes/:id', passport.authenticate('jwt',{session:false} ), async 
     }
 })
 
+router.get('/incomes-range-date/:id', passport.authenticate('jwt',{session:false} ),  async (req, res)=>{
+
+    const id = req.params.id;
+    const startDate = req.query.startDate
+    const endDate = req.query.endDate
+
+
+    try {
+        const incomes = await IncomeController.getIncomesByDateRange(startDate, endDate, id);
+        res.status(201).json({list: incomes});
+    } catch (error) {
+        res.status(400).json({message: error.message});
+    }
+})
+
 router.post('/incomes', async (req, res)=>{
     const {
         userId,

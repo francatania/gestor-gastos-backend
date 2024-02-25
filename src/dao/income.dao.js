@@ -10,6 +10,10 @@ export default class IncomeDAO{
         return await incomeModel.findOne({_id: id});
     }
 
+    static async getByDateRange(startDate, endDate, id){
+        return await incomeModel.find({ date: { $gte: startDate, $lte: endDate }, userId: id });
+    }
+
     static async getByUser(user){
         return await incomeModel.find({ userId: { $in: user } })
     }

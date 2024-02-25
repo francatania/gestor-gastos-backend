@@ -5,7 +5,8 @@ import usersRouter from './routers/users.router.js';
 import incomeRouter from './routers/incomes.router.js'
 import spentRouter from './routers/spents.router.js';
 import authRouter from './routers/auth.router.js';
-import categoriesRouter from './routers/categories.router.js';
+import spentsCategoriesRouter from './routers/spents.categories.router.js';
+import incomesCategoriesRouter from './routers/incomes.categories.router.js';
 
 import passport from 'passport';
 import { init as initPassportConfig } from './config/passport.config.js';
@@ -24,7 +25,7 @@ initPassportConfig();
 app.use(passport.initialize());
 
 
-app.use('/api', usersRouter, incomeRouter, spentRouter, authRouter, categoriesRouter);
+app.use('/api', usersRouter, incomeRouter, spentRouter, authRouter, spentsCategoriesRouter, incomesCategoriesRouter);
 
 app.use((error, req, res, next) => {
   const message = `Ah ocurrido un error desconocido 😨: ${error.message}`;

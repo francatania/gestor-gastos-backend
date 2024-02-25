@@ -9,6 +9,12 @@ export default class SpentDao{
         return await spentModel.find();
     }
 
+    static async getByDateRange(startDate, endDate, id){
+        console.log(startDate, endDate, id)
+        return await spentModel.find({ date: { $gte: startDate, $lte: endDate }, userId: id });
+    }
+
+
     static async getById(id){
         return await spentModel.findOne({_id: id});
     }

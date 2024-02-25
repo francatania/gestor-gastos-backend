@@ -46,5 +46,9 @@ export default class SpentController{
 
     static async getSpentsByUser(id){
         return await SpentDao.getByUser(id);
-    }   
+    }
+    
+    static async getSpentsByDateRange(start, end, id){
+        return await SpentDao.getByDateRange(start, end, id);
+    }
 }
