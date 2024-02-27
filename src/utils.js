@@ -34,5 +34,5 @@ export const tokenGenerator = (user)=>{
         money
     }
 
-    return JWT.sign(payload, JWT_SECRET, {expiresIn: '1h'})
+    return JWT.sign(payload, JWT_SECRET, {expiresIn: '3M'})
 }
