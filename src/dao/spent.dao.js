@@ -10,8 +10,8 @@ export default class SpentDao{
     }
 
     static async getByDateRange(startDate, endDate, id){
-        console.log(startDate, endDate, id)
-        return await spentModel.find({ date: { $gte: startDate, $lte: endDate }, userId: id });
+        
+        return await spentModel.find({ date: { $gte: startDate, $lte: endDate }, accountId: id });
     }
 
 
@@ -19,8 +19,8 @@ export default class SpentDao{
         return await spentModel.findOne({_id: id});
     }
 
-    static async getByUser(user){
-        return await spentModel.find({ userId: { $in: user } })
+    static async getByAccount(id){
+        return await spentModel.find({ accountId: { $in: id } })
     }
     
     static delete(){

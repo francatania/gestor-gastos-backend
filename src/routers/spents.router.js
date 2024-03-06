@@ -20,7 +20,6 @@ router.get('/spents-range-date/:id', passport.authenticate('jwt',{session:false}
     const startDate = req.query.startDate
     const endDate = req.query.endDate
 
-    console.log(id, startDate, endDate)
 
     try {
         const spents = await SpentController.getSpentsByDateRange(startDate, endDate, id);
@@ -34,7 +33,7 @@ router.get('/spents/:id', passport.authenticate('jwt',{session:false} ), async (
     const id = req.params.id;
 
     try {
-        const spents = await SpentController.getSpentsByUser(id);
+        const spents = await SpentController.getSpentsByAccount(id);
         res.status(201).json({list: spents});
     } catch (error) {
         res.status(400).json({message: error.message});
@@ -43,7 +42,7 @@ router.get('/spents/:id', passport.authenticate('jwt',{session:false} ), async (
 
 router.post('/spents', async (req, res)=>{
     const {
-        userId,
+        accountId,
         category,
         description,
         date,
@@ -51,7 +50,7 @@ router.post('/spents', async (req, res)=>{
     } = req.body
 
     const newSpent = {          
-            userId,
+            accountId,
             category,
             description,
             date,

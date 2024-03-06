@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
 const spentSchema = new Schema({
-    userId:{type: mongoose.Schema.Types.ObjectId, ref: 'users', required:true},
+    accountId:{type: mongoose.Schema.Types.ObjectId, ref: 'accounts', required:true},
     category: {type: String, required:true},
     description: {type: String, required:true},
     date: {type: Date, required:true},

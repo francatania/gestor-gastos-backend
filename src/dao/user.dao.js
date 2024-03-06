@@ -20,7 +20,7 @@ export default class UserDao{
 
     static async getById(data){
         const id = data;
-        return await userModel.findOne({_id: id}).populate('incomes spents');
+        return await userModel.findOne({_id: id}).populate("accounts")
     }
 
     static async getByEmail(data){
@@ -30,7 +30,7 @@ export default class UserDao{
 
     static async get(){
         
-        return await userModel.find().populate('incomes spents');
+        return await userModel.find()
     }
 
     static delete(){

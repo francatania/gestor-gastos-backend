@@ -20,19 +20,17 @@ export const tokenGenerator = (user)=>{
         first_name,
         last_name,
         email,
-        incomes,
-        spents,
-        money
+        accounts
+
     } = user;
 
     const payload = {        
         _id: id,
         first_name,
         last_name,
-        incomes,
-        spents,
-        money
+        accounts,
+        email
     }
 
-    return JWT.sign(payload, JWT_SECRET, {expiresIn: '3M'})
+    return JWT.sign(payload, JWT_SECRET, {expiresIn: '1y'})
 }

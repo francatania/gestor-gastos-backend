@@ -1,11 +1,11 @@
 import SpentDao from "../dao/spent.dao.js";
-import UserController from "./user.controller.js";
+import AccountController from "./account.controller.js";
 
 export default class SpentController{
 
     static async register(data){
         const { 
-            userId,
+            accountId,
             category,
             description,
             date,
@@ -13,7 +13,7 @@ export default class SpentController{
         } = data;
     
         if (
-            !userId ||
+            !accountId ||
             !category ||
             !description ||
             !date ||
@@ -24,18 +24,18 @@ export default class SpentController{
     
         try {
             const spent = await SpentDao.create(data); // Crear el ingreso
-            const userToUpdate = await UserController.getUserById(userId); // Obtener el usuario
+            const accountToUpdate = await AccountController.getAccountById(accountId); // Obtener la cuenta
     
-            if (!userToUpdate) {
-                throw new Error("El usuario no fue encontrado");
+            if (!accountToUpdate) {
+                throw new Error("La cuenta no fue encontrado");
             }
     
-            userToUpdate.spents.push(spent._id); // Agregar el ID del nuevo ingreso al array de ingresos del usuario
+            accountToUpdate.spents.push(spent._id); // Agregar el ID del nuevo gasto al array de gastos del usuario
     
-            await userToUpdate.save(); // Guardar el usuario con el nuevo ingreso asociado
+            await accountToUpdate.save(); // Guardar la cuenta con el nuevo ingreso asociado
         } catch (error) {
             // Manejar cualquier error que ocurra durante el proceso
-            console.error("Error al registrar el ingreso y actualizar el usuario:", error);
+            console.error("Error al registrar el gasto y actualizar la cuenta:", error);
             throw error;
         }
     }
@@ -44,8 +44,8 @@ export default class SpentController{
         return await SpentDao.get();
     }
 
-    static async getSpentsByUser(id){
-        return await SpentDao.getByUser(id);
+    static async getSpentsByAccount(id){
+        return await SpentDao.getByAccount(id);
     }
     
     static async getSpentsByDateRange(start, end, id){

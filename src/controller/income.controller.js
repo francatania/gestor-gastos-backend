@@ -1,11 +1,11 @@
 import IncomeDAO from "../dao/income.dao.js";
-import UserController from "./user.controller.js";
+import AccountController from "./account.controller.js";
 
 export default class IncomeController{
 
     static async register(data){
         const { 
-            userId,
+            accountId,
             category,
             description,
             date,
@@ -13,7 +13,7 @@ export default class IncomeController{
         } = data;
     
         if (
-            !userId ||
+            !accountId ||
             !category ||
             !description ||
             !date ||
@@ -24,15 +24,15 @@ export default class IncomeController{
     
         try {
             const income = await IncomeDAO.create(data); // Crear el ingreso
-            const userToUpdate = await UserController.getUserById(userId); // Obtener el usuario
+            const accountToUpdate = await AccountController.getAccountById(accountId); // Obtener la cuenta
     
-            if (!userToUpdate) {
-                throw new Error("El usuario no fue encontrado");
+            if (!accountToUpdate) {
+                throw new Error("La cuenta no fue encontrado");
             }
     
-            userToUpdate.incomes.push(income._id); // Agregar el ID del nuevo ingreso al array de ingresos del usuario
+            accountToUpdate.incomes.push(income._id); // Agregar el ID del nuevo ingreso al array de ingresos del usuario
     
-            await userToUpdate.save(); // Guardar el usuario con el nuevo ingreso asociado
+            await accountToUpdate.save(); // Guardar el usuario con el nuevo ingreso asociado
         } catch (error) {
             // Manejar cualquier error que ocurra durante el proceso
             console.error("Error al registrar el ingreso y actualizar el usuario:", error);
@@ -40,8 +40,8 @@ export default class IncomeController{
         }
     }
 
-    static async getIncomesByUser(id){
-        return await IncomeDAO.getByUser(id);
+    static async getIncomesByAccount(id){
+        return await IncomeDAO.getByAccount(id);
     }   
 
     static async getIncomesByDateRange(start, end, id){

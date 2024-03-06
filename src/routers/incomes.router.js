@@ -6,22 +6,22 @@ import passport from 'passport';
 const router = Router();
 
 
-router.get('/incomes', async (req, res)=>{
-    const {id} = req.body;
+// router.get('/incomes', async (req, res)=>{
+//     const {id} = req.body;
 
-    try {
-        const incomes = await IncomeController.getByUser(id);
-        res.status(201).json({list: incomes});
-    } catch (error) {
-        res.status(400).json({message: error.message});
-    }
-})
+//     try {
+//         const incomes = await IncomeController.getByUser(id);
+//         res.status(201).json({list: incomes});
+//     } catch (error) {
+//         res.status(400).json({message: error.message});
+//     }
+// })
 
 router.get('/incomes/:id', passport.authenticate('jwt',{session:false} ), async (req, res)=>{
     const id = req.params.id;
 
     try {
-        const incomes = await IncomeController.getIncomesByUser(id);
+        const incomes = await IncomeController.getIncomesByAccount(id);
         res.status(201).json({list: incomes});
     } catch (error) {
         res.status(400).json({message: error.message});
@@ -45,7 +45,7 @@ router.get('/incomes-range-date/:id', passport.authenticate('jwt',{session:false
 
 router.post('/incomes', async (req, res)=>{
     const {
-        userId,
+        accountId,
         category,
         description,
         date,
@@ -53,7 +53,7 @@ router.post('/incomes', async (req, res)=>{
     } = req.body
 
     const newIncome = {          
-            userId,
+            accountId,
             category,
             description,
             date,
@@ -63,7 +63,7 @@ router.post('/incomes', async (req, res)=>{
     try {
 
         await IncomeController.register(newIncome);
-        res.status(201).json({message: "Ingreso agredado"})
+        res.status(201).json({message: "Ingreso agregado"})
 
     } catch (error) {
         res.status(400).json({message: error.message});

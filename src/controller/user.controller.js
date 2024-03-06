@@ -53,6 +53,11 @@ export default class UserController{
         return UserDao.getById(data);
     }
 
+    static async getUserByEmail(data){
+        return UserDao.getByEmail(data);
+    }
+
+
     static async deleteUsers(){
         return await UserDao.delete();
     }

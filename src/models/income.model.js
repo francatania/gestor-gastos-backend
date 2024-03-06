@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
 const incomeSchema = new Schema({
-    userId:{type: mongoose.Schema.Types.ObjectId, ref: 'users'},
+    accountId:{type: mongoose.Schema.Types.ObjectId, ref: 'users'},
     category: {type: String},
     description: {type: String},
     date: {type: Date},
