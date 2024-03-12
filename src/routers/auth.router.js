@@ -31,7 +31,6 @@ router.post('/auth/register', async (req, res) => {
 
   router.post('/auth/login', async (req, res)=>{
     const user = req.body;
-    console.log(user);
     try {
       const token = await UserController.login(user);
       console.log(token)
