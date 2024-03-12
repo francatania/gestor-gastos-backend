@@ -18,7 +18,7 @@ router.post('/auth/register', async (req, res) => {
         password,
         incomes: [],
         spents: [],
-        money: 0
+        transfers: []
       }
   
       try {

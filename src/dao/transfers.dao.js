@@ -11,7 +11,13 @@ export default class TransferDao{
 
     static async getByDateRange(startDate, endDate, id){
         // console.log(startDate, endDate, id)
-        return await transfers.find({ date: { $gte: startDate, $lte: endDate }, accountId: id });
+        return await transfers.find({ 
+            date: { $gte: startDate, $lte: endDate },
+            $or: [ 
+                { accountId: id }, 
+                { to: id } 
+            ]
+        });
     }
 
 
@@ -25,7 +31,7 @@ export default class TransferDao{
         
 
     static async getByAccount(account){
-        return await transfers.find({ accountId: account  })
+        return await transfers.find({ $or: [ { accountId: account }, { to: account } ] });
     }
     
     static delete(){

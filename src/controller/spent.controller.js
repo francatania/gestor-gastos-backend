@@ -51,4 +51,16 @@ export default class SpentController{
     static async getSpentsByDateRange(start, end, id){
         return await SpentDao.getByDateRange(start, end, id);
     }
+
+    static async deleteSpent(id, accountId){
+        try {
+            const accountToUpdate = await AccountController.getAccountById(accountId);
+            accountToUpdate.spents = accountToUpdate.spents.filter(spent => spent.value !== id);
+            await accountToUpdate.save()
+            await SpentDao.deleteById(id);
+        } catch (error) {
+            console.log(error);
+            throw Error(error);
+        }
+    }
 }

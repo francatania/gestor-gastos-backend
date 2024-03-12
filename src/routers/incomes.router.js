@@ -70,4 +70,15 @@ router.post('/incomes', async (req, res)=>{
     }
 })
 
+router.delete('/incomes/:id', async (req, res)=>{
+    const id = req.params.id;
+    const accountId = req.query.account
+    try {
+        await IncomeController.deleteIncome(id, accountId);
+        res.status(200).json({message:"Ingreso eliminado."})
+    } catch (error) {
+        res.status(400).json({message: error.message});
+    }
+})
+
 export default router;

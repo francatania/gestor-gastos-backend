@@ -67,5 +67,16 @@ router.post('/spents', async (req, res)=>{
     }
 })
 
+router.delete('/spents/:id', async (req, res)=>{
+    const id = req.params.id;
+    const accountId = req.query.account
+    try {
+        await SpentController.deleteSpent(id, accountId);
+        res.status(200).json({message:"Gasto eliminado."})
+    } catch (error) {
+        res.status(400).json({message: error.message});
+    }
+})
+
 
 export default router;

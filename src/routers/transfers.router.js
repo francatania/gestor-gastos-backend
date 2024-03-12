@@ -44,7 +44,9 @@ router.post('/transfers', passport.authenticate('jwt',{session:false}), async (r
     const {
         userId,
         accountId,
+        fromName,
         to,
+        toName,
         date,
         amount
     } = req.body
@@ -52,7 +54,9 @@ router.post('/transfers', passport.authenticate('jwt',{session:false}), async (r
     const data = {
         userId,
         accountId,
+        fromName,
         to,
+        toName,
         date,
         amount
     }

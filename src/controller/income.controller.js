@@ -48,5 +48,17 @@ export default class IncomeController{
         return await IncomeDAO.getByDateRange(start, end, id);
     }
     
+    
+    static async deleteIncome(id, accountId){
+        try {
+            const accountToUpdate = await AccountController.getAccountById(accountId);
+            accountToUpdate.incomes = accountToUpdate.incomes.filter(income => income.value !== id);
+            await accountToUpdate.save()
+            await IncomeDAO.deleteById(id);
+        } catch (error) {
+            console.log(error);
+            throw Error(error);
+        }
+    }
 
 }
