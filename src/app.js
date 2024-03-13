@@ -17,7 +17,7 @@ import { __dirname } from './utils.js';
 
 const app = express();
 
-app.use(cors({origin:'https://mi-gestor-gastos.netlify.app', methods:['GET', 'PUT', 'POST', 'DELETE'], credentials: true }));
+app.use(cors({methods:['GET', 'PUT', 'POST', 'DELETE'], credentials: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
