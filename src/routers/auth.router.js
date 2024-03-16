@@ -23,6 +23,7 @@ router.post('/auth/register', async (req, res) => {
   
       try {
         await UserController.register(newUser);
+        console.log(`Usuario registrado: ${first_name} ${last_name}`)
         res.status(201).json({message: 'Usuario creado.'});
       } catch (error) {
         res.status(400).json({message: error.message});
@@ -33,7 +34,7 @@ router.post('/auth/register', async (req, res) => {
     const user = req.body;
     try {
       const token = await UserController.login(user);
-      console.log(token)
+      console.log(`Usuario logueado: ${user.email}`)
       res.status(200).json({ token });
     } catch (error) {
       res.status(401).json({message: error.message});

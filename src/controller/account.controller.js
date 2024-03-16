@@ -23,18 +23,18 @@ export default class AccountController{
         }
 
         try {
-            const account = await AccountDao.create(data); // Crear el ingreso
-            const userToUpdate = await UserController.getUserById(userId); // Obtener el usuario
+            const account = await AccountDao.create(data); 
+            const userToUpdate = await UserController.getUserById(userId); 
     
             if (!userToUpdate) {
                 throw new Error("El usuario no fue encontrado");
             }
     
-            userToUpdate.accounts.push(account._id); // Agregar el ID del nuevo ingreso al array de ingresos del usuario
+            userToUpdate.accounts.push(account._id); 
     
-            await userToUpdate.save(); // Guardar el usuario con el nuevo ingreso asociado
+            await userToUpdate.save(); 
         } catch (error) {
-            // Manejar cualquier error que ocurra durante el proceso
+    
             console.error("Error al registrar la cuenta", error);
             throw error;
         }

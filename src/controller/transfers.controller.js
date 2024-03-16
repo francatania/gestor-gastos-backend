@@ -44,7 +44,7 @@ export default class TransferController{
             await accountToUpdate1.save();
             await accountToUpdate2.save();  
         } catch (error) {
-            // Manejar cualquier error que ocurra durante el proceso
+   
             console.error("Error al registrar la transferencia y actualizar la cuenta:", error);
             throw error;
         }

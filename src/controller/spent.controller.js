@@ -23,18 +23,18 @@ export default class SpentController{
         }
     
         try {
-            const spent = await SpentDao.create(data); // Crear el ingreso
-            const accountToUpdate = await AccountController.getAccountById(accountId); // Obtener la cuenta
+            const spent = await SpentDao.create(data); 
+            const accountToUpdate = await AccountController.getAccountById(accountId); 
     
             if (!accountToUpdate) {
                 throw new Error("La cuenta no fue encontrado");
             }
     
-            accountToUpdate.spents.push(spent._id); // Agregar el ID del nuevo gasto al array de gastos del usuario
+            accountToUpdate.spents.push(spent._id); 
     
-            await accountToUpdate.save(); // Guardar la cuenta con el nuevo ingreso asociado
+            await accountToUpdate.save(); 
         } catch (error) {
-            // Manejar cualquier error que ocurra durante el proceso
+            
             console.error("Error al registrar el gasto y actualizar la cuenta:", error);
             throw error;
         }

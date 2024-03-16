@@ -23,18 +23,18 @@ export default class IncomeController{
         }
     
         try {
-            const income = await IncomeDAO.create(data); // Crear el ingreso
-            const accountToUpdate = await AccountController.getAccountById(accountId); // Obtener la cuenta
+            const income = await IncomeDAO.create(data); 
+            const accountToUpdate = await AccountController.getAccountById(accountId); 
     
             if (!accountToUpdate) {
                 throw new Error("La cuenta no fue encontrado");
             }
     
-            accountToUpdate.incomes.push(income._id); // Agregar el ID del nuevo ingreso al array de ingresos del usuario
+            accountToUpdate.incomes.push(income._id); 
     
-            await accountToUpdate.save(); // Guardar el usuario con el nuevo ingreso asociado
+            await accountToUpdate.save(); 
         } catch (error) {
-            // Manejar cualquier error que ocurra durante el proceso
+            
             console.error("Error al registrar el ingreso y actualizar el usuario:", error);
             throw error;
         }
