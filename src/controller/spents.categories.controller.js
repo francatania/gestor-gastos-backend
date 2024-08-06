@@ -6,6 +6,10 @@ export default class SpentsCategoriesController{
         return await SpentsCategoriesDao.get();
     }
 
+    static async getById(id){
+        return await SpentsCategoriesDao.getByAccountId(id);
+    }
+
     static async createCategory(data){
         return await SpentsCategoriesDao.create(data);
     }

@@ -12,6 +12,17 @@ router.get('/spents-categories', async (req, res)=>{
     }
 })
 
+router.get('/spents-categories/:id', async (req, res)=>{
+    try {
+        const id = req.params.id;
+        const categories = await SpentsCategoriesController.getById(id);
+        res.status(200).json({categories: categories});
+    } catch (error) {
+        res.status(400).json({message: error.message});
+    }
+})
+
+
 router.post('/spents-categories', async (req, res)=>{
     const data = req.body
 
