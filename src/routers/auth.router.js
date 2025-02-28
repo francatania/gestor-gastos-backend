@@ -23,6 +23,27 @@ router.post('/auth/register', async (req, res) => {
   
       try {
         await UserController.register(newUser);
+        const user = await UserController.getUserByEmail(email);
+        if(!user){
+          throw new Error("El usuario no existe");
+        }
+        const userId = user._id;
+        const accountName1 = "Principal"
+        const accountName2 = "Ahorros"
+
+        const data1 = {
+          accountName: accountName1,
+          userId
+        }
+    
+        const data2 = {
+          accountName: accountName2,
+          userId
+        }
+
+        await AccountController.create(data1),
+        await AccountController.create(data2)
+
         console.log(`Usuario registrado: ${first_name} ${last_name}`)
         res.status(201).json({message: 'Usuario creado.'});
       } catch (error) {

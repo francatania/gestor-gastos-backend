@@ -30,7 +30,7 @@ app.use(passport.initialize());
 app.use('/api', usersRouter, incomeRouter, spentRouter, authRouter, spentsCategoriesRouter, incomesCategoriesRouter, accountsRouter, transfersRouter);
 
 app.use((error, req, res, next) => {
-  const message = `Ah ocurrido un error desconocido 😨: ${error.message}`;
+  const message = `Ha ocurrido un error desconocido: ${error.message}`;
   console.log(message);
   res.status(500).json({ status: 'error', message });
 });
