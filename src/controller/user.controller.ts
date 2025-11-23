@@ -1,35 +1,30 @@
 import UserDao from "../dao/user.dao.js";
 import { verifyPassword, tokenGenerator } from "../utils.js"
+import { UserService } from '../services/user.service';
+import { RegisterUserDTO } from '../dto/register-user.dto';
+import { Request, Response, NextFunction } from 'express';
 
 export default class UserController{
 
-    static async register(data){    
-        const {
-            first_name, 
-            last_name, 
-            email, 
-            password,
-        } = data;
-        
-        if(
-            !first_name ||
-            !last_name ||
-            !password ||
-            !email 
-            ){
-            throw new Error('Todos los campos son obligatorios')
-        }
-        
-        let user =  await UserDao.getByEmail(email);
+    constructor(private readonly userService: UserService) {}
 
-        if(user){
-            throw new Error('El usuario ya existe.')
-        }
+    async register(req: Request, res: Response, next: NextFunction){    
+        try {
+            const data = req.body as RegisterUserDTO;
 
-        return await UserDao.create(data);
-    }
+            const user = await this.userService.register(data);
 
-    static async login(data){
+            return res.status(201).json({
+                message: 'Successfully registered user.',
+                user,
+            });
+            } catch (error) {
+            next(error);
+            }
+        };
+    
+
+    /*static async login(data){
         const {email, password} = data;
         if(!email || !password){
             throw new Error('Correo o contraseña invalidos.');
@@ -64,5 +59,5 @@ export default class UserController{
 
     static async deleteById(id){
         return await UserDao.deleteById(id);
-    }
+    }*/
 }

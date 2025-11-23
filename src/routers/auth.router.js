@@ -1,7 +1,12 @@
 import { Router } from 'express';
-import UserController from '../controller/user.controller.js';
+import { UserController } from '../controllers/user.controller';
+import { UserDao } from '../dao/user.dao';
+import { UserService } from '../services/user.service';
 
 const router = Router();
+const userDao = new UserDao();
+const userService = new UserService(userDao);
+const userController = new UserController(userService);
 
 router.post('/auth/register', async (req, res) => {
     const {
