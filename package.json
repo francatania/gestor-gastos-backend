@@ -5,9 +5,9 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon -r dotenv/config .",
-    "start":"node -r dotenv/config ."
+    "build": "tsc",
+    "start": "node -r dotenv/config dist/server.js",
+    "dev": "nodemon dist/server.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -24,5 +24,11 @@
     "passport-jwt": "^4.0.1"
   },
   "author": "Franco Catania",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
 }
