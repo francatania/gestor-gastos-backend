@@ -1,27 +1,23 @@
 import UserDao from "../dao/user.dao.js";
 import { verifyPassword, tokenGenerator } from "../utils.js"
 import { UserService } from '../services/user.service';
-import { RegisterUserDTO } from '../dto/register-user.dto';
+import { RegisterUserDTO } from '../dto/request/register-user.dto.js';
 import { Request, Response, NextFunction } from 'express';
 
 export default class UserController{
 
     constructor(private readonly userService: UserService) {}
 
-    async register(req: Request, res: Response, next: NextFunction){    
+    register = async (req: Request, res: Response) => {
         try {
-            const data = req.body as RegisterUserDTO;
-
-            const user = await this.userService.register(data);
-
-            return res.status(201).json({
-                message: 'Successfully registered user.',
-                user,
-            });
-            } catch (error) {
-            next(error);
-            }
-        };
+        const data: RegisterUserDTO = req.body;
+        const result = await this.userService.register(data);
+        return res.status(201).json(result);
+        } catch (error: any) {
+        console.error(error);
+        return res.status(400).json({ message: error.message ?? 'Error creating user' });
+        }
+    };
     
 
     /*static async login(data){

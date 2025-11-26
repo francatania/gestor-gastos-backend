@@ -1,4 +1,9 @@
-import mongoose, { Schema, InferSchemaType, Model } from 'mongoose';
+import mongoose, {
+  Schema,
+  InferSchemaType,
+  Model,
+  HydratedDocument,
+} from 'mongoose';
 
 const userSchema = new Schema({
   first_name: { type: String, required: true },
@@ -14,18 +19,9 @@ const userSchema = new Schema({
   ],
 }, { timestamps: true });
 
-/**
- * InferSchemaType converts schema into ts' type:
- * {
- *   first_name: string;
- *   last_name: string;
- *   email: string; 
- *   password: string;
- *   accounts: Types.ObjectId[];
- *   createdAt: Date;
- *   updatedAt: Date;
- * }
- */
-export type UserDocument = InferSchemaType<typeof userSchema>;
 
-export const userModel: Model<UserDocument> = mongoose.model('users', userSchema);
+export type User = InferSchemaType<typeof userSchema>;
+
+export type UserDocument = HydratedDocument<User>;
+
+export const userModel: Model<User> = mongoose.model<User>('users', userSchema);

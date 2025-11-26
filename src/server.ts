@@ -1,0 +1,18 @@
+import http from 'http';
+
+import config from './config/config.js';
+import app from './app.js';
+import { init as initMongoDB } from './db/mongodb.js';
+
+const start = async () => {
+  await initMongoDB();
+
+  const server = http.createServer(app);
+  const PORT = config.PORT;
+
+  server.listen(PORT, () => {
+    console.log(`Server running in port ${PORT}`);
+  });
+};
+
+start();
