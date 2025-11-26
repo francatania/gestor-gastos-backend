@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node -r dotenv/config dist/server.js",
-    "dev": "nodemon dist/server.js"
+    "dev": "concurrently \"npm:watch-ts\" \"npm:watch-node\"",
+    "watch-ts": "tsc --watch",
+    "watch-node": "nodemon dist/server.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -26,8 +28,11 @@
   "author": "Franco Catania",
   "license": "ISC",
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
+    "@types/passport": "^1.0.17",
+    "concurrently": "^9.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
