@@ -3,6 +3,7 @@ import { verifyPassword, tokenGenerator } from "../utils.js"
 import { UserService } from '../services/user.service';
 import { RegisterUserDTO } from '../dto/request/register-user.dto.js';
 import { Request, Response, NextFunction } from 'express';
+import { RequestLoginDTO } from "../dto/request/request-login.dto.js";
 
 export default class UserController{
 
@@ -15,26 +16,24 @@ export default class UserController{
         return res.status(201).json(result);
         } catch (error: any) {
         console.error(error);
-        return res.status(400).json({ message: error.message ?? 'Error creating user' });
+        return res.status(400).json({ message: error.message ?? 'Error creating user.' });
         }
     };
     
 
-    /*static async login(data){
-        const {email, password} = data;
-        if(!email || !password){
-            throw new Error('Correo o contraseña invalidos.');
+    login = async (req: Request, res: Response) =>{
+
+        try {
+            const data : RequestLoginDTO = req.body;
+            const result = await this.userService.login(data);
+            return res.status(200).json(result)
+        } catch (error: any) {
+            console.error(error);
+            return res.status(400).json({ message: error.message ?? 'Login error.' });
         }
-        const user = await UserDao.getByEmail(email);
-        if(!user){
-            throw new Error('Correo o contraseña invalidos.');}
-
-        const isValidPass = verifyPassword(password, user);
-
-        if(!isValidPass){
-            throw new Error('Correo o contraseña invalidos.');}
-        return tokenGenerator(user);
     }
+
+    /*
 
     static async getUsers(){
         return await UserDao.get();

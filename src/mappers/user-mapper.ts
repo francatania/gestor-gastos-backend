@@ -1,5 +1,5 @@
 import { ResponseAccountDTO } from "../dto/response/account-created";
-import { ResponseUserCreatedDTO } from "../dto/response/user-created.dto";
+import { ResponseUserCreatedDTO } from "../dto/response/response-user-created.dto";
 import { UserDocument } from "../models/user.model";
 
 export class UserMapper{

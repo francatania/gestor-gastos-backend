@@ -3,11 +3,13 @@ import UserDao from '../dao/user.dao.js';
 import { UserDocument } from '../models/user.model';
 import { RequestAccountDTO } from '../dto/request/request-account.dto';
 import { AccountService } from './account.service';
-import { ResponseUserCreatedDTO } from '../dto/response/user-created.dto';
-import { AccountDocument } from '../models/accounts.model';
+import { ResponseUserCreatedDTO } from '../dto/response/response-user-created.dto';
 import { ResponseAccountDTO } from '../dto/response/account-created';
 import { AccountMapper } from '../mappers/account.mapper.js';
 import { UserMapper } from '../mappers/user-mapper.js';
+import { RequestLoginDTO } from '../dto/request/request-login.dto';
+import { ResponseLoginDTO } from '../dto/response/response-login';
+import { tokenGenerator, verifyPassword } from '../utils.js';
 
 export class UserService {
   constructor(private readonly userDao: UserDao, 
@@ -61,5 +63,23 @@ export class UserService {
         throw error;
     }
 
+  }
+
+  async login(data: RequestLoginDTO): Promise<ResponseLoginDTO>{
+        const {email, password} = data;
+
+        if(!email || !password){
+            throw new Error('Invalid credentials.');
+        }
+        const user: UserDocument | null = await this.userDao.getByEmail(email);
+        if(!user){
+            throw new Error('Invalid credentials.');}
+
+        const isValidPass: boolean = verifyPassword(password, user);
+
+        if(!isValidPass){
+            throw new Error('Invalid credentials.');}
+
+        return tokenGenerator(user);
   }
 }
