@@ -10,18 +10,15 @@ export default class UserDao{
     });
   }
 
-    async getById(data: string){
-        const id = data;
+    async getById(id: string): Promise<UserDocument | null> {
         return await userModel.findOne({_id: id}).populate("accounts")
     }
 
-    async getByEmail(data: string){
-        const email = data;
+    async getByEmail(email: string): Promise<UserDocument | null>{
         return await userModel.findOne({email});
     }
 
-    async get(){
-        
+    async get(): Promise<UserDocument[] | null>{
         return await userModel.find()
     }
 

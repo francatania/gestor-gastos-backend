@@ -18,17 +18,8 @@ const userController = new UserController(userService);
 
 router.post("/auth/register", userController.register);
 
-  
-/*router.post('/auth/login', async (req, res)=>{
-    const user = req.body;
-    try {
-      const token = await UserController.login(user);
-      console.log(`Usuario logueado: ${user.email}`)
-      res.status(200).json({ token });
-    } catch (error) {
-      res.status(401).json({message: error.message});
-    }
-    
-  })*/
+router.post("/auth/login", userController.login);
+
+
 
   export default router;
