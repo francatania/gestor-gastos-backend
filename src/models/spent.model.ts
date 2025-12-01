@@ -1,4 +1,9 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, {
+  Schema,
+  InferSchemaType,
+  Model,
+  HydratedDocument,
+} from 'mongoose';
 
 const spentSchema = new Schema({
     accountId:{type: mongoose.Schema.Types.ObjectId, ref: 'accounts', required:true},
@@ -9,4 +14,11 @@ const spentSchema = new Schema({
     amount: {type: Number, required:true},
 },{timestamps:true})
 
-export default mongoose.model('spents', spentSchema);
+
+
+export type Spent = InferSchemaType<typeof spentSchema>;
+
+export type SpentDocument = HydratedDocument<Spent>;
+
+export const spentModel: Model<Spent> = mongoose.model<Spent>('spents', spentSchema);
+

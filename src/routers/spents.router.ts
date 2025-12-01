@@ -1,20 +1,21 @@
 import { Router } from 'express';
 import SpentController from '../controller/spent.controller.js';
 import passport from 'passport';
+import { SpentService } from '../services/spent.service.js';
+import SpentDao from '../dao/spent.dao.js';
 
 const router = Router();
+const spentDao = new SpentDao();
+const spentService = new SpentService(spentDao);
+const spentController = new SpentController(spentService);
 
-router.get('/spents', passport.authenticate('jwt',{session:false} ),  async (req, res)=>{
+router.post(
+  '/spents',
+  passport.authenticate('jwt', { session: false }),
+  spentController.createSpent
+);
 
-    try {
-        const spents = await SpentController.getSpents();
-        res.status(201).json({list: spents});
-    } catch (error) {
-        res.status(400).json({message: error.message});
-    }
-})
-
-router.get('/spents-range-date/:id', passport.authenticate('jwt',{session:false} ),  async (req, res)=>{
+/*router.get('/spents-range-date/:id', passport.authenticate('jwt',{session:false} ),  async (req, res)=>{
 
     const id = req.params.id;
     const startDate = req.query.startDate
@@ -76,7 +77,7 @@ router.delete('/spents/:id', async (req, res)=>{
     } catch (error) {
         res.status(400).json({message: error.message});
     }
-})
+})*/
 
 
 export default router;
