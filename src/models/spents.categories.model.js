@@ -8,4 +8,3 @@ const spentsCategoriesSchema = new Schema({
 
 export default mongoose.model('spentsCategories', spentsCategoriesSchema);
 
-//accountId:{type: mongoose.Schema.Types.ObjectId, ref: 'accounts', required:true}
