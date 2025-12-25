@@ -1,9 +1,9 @@
 import UserDao from "../dao/user.dao.js";
 import { verifyPassword, tokenGenerator } from "../utils.js"
 import { UserService } from '../services/user.service';
-import { RegisterUserDTO } from '../dto/request/register-user.dto.js';
+import { RegisterUserDTO } from '../dto/request/user/register-user.dto.js';
 import { Request, Response, NextFunction } from 'express';
-import { RequestLoginDTO } from "../dto/request/request-login.dto.js";
+import { RequestLoginDTO } from "../dto/request/user/request-login.dto.js";
 
 export default class UserController{
 

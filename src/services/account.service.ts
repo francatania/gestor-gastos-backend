@@ -1,5 +1,5 @@
 import AccountDao from "../dao/account.dao";
-import { RequestAccountDTO } from "../dto/request/request-account.dto";
+import { RequestAccountDTO } from "../dto/request/account/request-account.dto";
 import { AccountDocument } from "../models/accounts.model";
 
 export class AccountService {

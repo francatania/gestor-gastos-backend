@@ -1,5 +1,6 @@
 import SpentDao from "../dao/spent.dao.js";
-import { RequestSpentDTO } from "../dto/request/request-spent.dto.js";
+import { RequestSpentDTO } from "../dto/request/spents/request-spent.dto.js";
+import { RequestSpentList } from "../dto/request/spents/request-spents-list.js";
 import { SpentService } from "../services/spent.service.js";
 import AccountController from "./account.controller.js";
 import { Request, Response } from 'express';
@@ -18,6 +19,21 @@ export default class SpentController{
         }
     }
 
+    getSpentsByDateRange = async (req: Request, res: Response) =>{
+        try {   
+            const data: RequestSpentList = {
+            accountId: req.params.id,
+            startDate: req.query.startDate as string,
+            endDate: req.query.endDate as string,
+            };
+            const result = await this.spentService.getSpentsByDateAndAccount(data);
+            return res.status(200).json(result);
+        } catch (error: any) {
+            console.error(error);
+             return res.status(400).json({ message: error.message ?? 'Error' });
+        }
+
+    }
 
     /*static async getSpents(){
         return await SpentDao.get();
@@ -27,9 +43,7 @@ export default class SpentController{
         return await SpentDao.getByAccount(id);
     }
     
-    static async getSpentsByDateRange(start, end, id){
-        return await SpentDao.getByDateRange(start, end, id);
-    }
+
 
     static async deleteSpent(id, accountId){
         try {

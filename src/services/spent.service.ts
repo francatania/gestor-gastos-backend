@@ -1,5 +1,6 @@
 import SpentDao from "../dao/spent.dao";
-import { RequestSpentDTO } from "../dto/request/request-spent.dto";
+import { RequestSpentDTO } from "../dto/request/spents/request-spent.dto";
+import { RequestSpentList } from "../dto/request/spents/request-spents-list";
 import { ResponseSpentCreated } from "../dto/response/response-dto-created.dto";
 import { SpentMapper } from "../mappers/spent.mapper.js";
 import { SpentDocument } from "../models/spent.model.js";
@@ -22,5 +23,27 @@ export class SpentService{
              throw error;
         }
 
+    }
+
+    async getSpentsByDateAndAccount(requestSpentList: RequestSpentList) :Promise<ResponseSpentCreated[]> {
+        if(!requestSpentList.accountId || !requestSpentList.startDate || !requestSpentList.endDate){
+            throw new Error('There are some fields missing.')
+        }
+
+        const { accountId, startDate, endDate} = requestSpentList;
+
+        try {
+            const list = await this.spentDao.getByDateRangeAndAccount(startDate, endDate, accountId);
+             
+               if (!list || list.length === 0) {
+                    throw new Error('There are no spents.');
+                }
+
+            const result: ResponseSpentCreated[] = list.map(x => SpentMapper.toDto(x))
+            return result;
+        } catch (error) {
+             console.error('Error while retrieving the spents',error);
+             throw error;
+        }
     }
 }

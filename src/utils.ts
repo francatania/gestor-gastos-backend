@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import JWT from 'jsonwebtoken';
 import config from './config/config.js';
 import {ResponseLoginDTO} from './dto/response/response-login.js'
-import { RequestLoginDTO } from './dto/request/request-login.dto.js';
+import { RequestLoginDTO } from './dto/request/user/request-login.dto.js';
 import { UserDocument } from './models/user.model.js';
 
 const __filename = fileURLToPath(import.meta.url);

@@ -1,6 +1,6 @@
 import { AccountService } from "../services/account.service.js";
 import UserController from "./user.controller.js";
-import { RequestAccountDTO } from "../dto/request/request-account.dto.js";
+import { RequestAccountDTO } from "../dto/request/account/request-account.dto.js";
 import { Request, Response, NextFunction } from 'express';
 
 export default class AccountController{

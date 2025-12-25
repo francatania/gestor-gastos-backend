@@ -1,13 +1,13 @@
-import { RegisterUserDTO } from '../dto/request/register-user.dto';
+import { RegisterUserDTO } from '../dto/request/user/register-user.dto';
 import UserDao from '../dao/user.dao.js'; 
 import { UserDocument } from '../models/user.model';
-import { RequestAccountDTO } from '../dto/request/request-account.dto';
+import { RequestAccountDTO } from '../dto/request/account/request-account.dto';
 import { AccountService } from './account.service';
 import { ResponseUserCreatedDTO } from '../dto/response/response-user-created.dto';
 import { ResponseAccountDTO } from '../dto/response/account-created';
 import { AccountMapper } from '../mappers/account.mapper.js';
 import { UserMapper } from '../mappers/user-mapper.js';
-import { RequestLoginDTO } from '../dto/request/request-login.dto';
+import { RequestLoginDTO } from '../dto/request/user/request-login.dto';
 import { ResponseLoginDTO } from '../dto/response/response-login';
 import { tokenGenerator, verifyPassword } from '../utils.js';
 

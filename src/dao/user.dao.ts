@@ -1,5 +1,5 @@
 import { userModel, UserDocument } from '../models/user.model.js';
-import { RegisterUserDTO } from '../dto/request/register-user.dto.js';
+import { RegisterUserDTO } from '../dto/request/user/register-user.dto.js';
 import { createHash } from '../utils.js';
 
 export default class UserDao{

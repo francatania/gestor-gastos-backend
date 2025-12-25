@@ -1,4 +1,4 @@
-import { RequestSpentDTO } from "../dto/request/request-spent.dto.js";
+import { RequestSpentDTO } from "../dto/request/spents/request-spent.dto.js";
 import {spentModel, SpentDocument} from "../models/spent.model.js";
 
 export default class SpentDao{
@@ -19,7 +19,7 @@ export default class SpentDao{
         return await spentModel.findOne({_id: id});
     }
 
-    async getByAccount(accountId: string): Promise<SpentDocument[] | null>{
+    async getByAccount(accountId: string): Promise<SpentDocument[] | []>{
         return await spentModel.find({ accountId: { $in: accountId } })
     }
     

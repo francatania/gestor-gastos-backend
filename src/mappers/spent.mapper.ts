@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { RequestSpentDTO } from "../dto/request/request-spent.dto";
+import { RequestSpentDTO } from "../dto/request/spents/request-spent.dto";
 import { SpentDocument, spentModel } from "../models/spent.model.js";
 import { ResponseSpentCreated } from "../dto/response/response-dto-created.dto";
 
@@ -20,6 +20,7 @@ export class SpentMapper{
 
     static toDto(spentModel: SpentDocument): ResponseSpentCreated{
         return {
+            spentId: spentModel._id.toString() ,
             accountId: spentModel.accountId.toString(),
             description: spentModel.description,
             date: spentModel.date.toISOString(),
