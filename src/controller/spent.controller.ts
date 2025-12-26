@@ -35,6 +35,17 @@ export default class SpentController{
 
     }
 
+    getSpentById = async (req: Request, res: Response) =>{
+        try {
+            const id: string = req.params.id
+            const result = await this.spentService.getSpentById(id)
+            return res.status(200).json(result);
+        } catch (error: any) {
+            console.error(error);
+             return res.status(400).json({ message: error.message ?? 'Error' });
+        }
+    }
+
     /*static async getSpents(){
         return await SpentDao.get();
     }

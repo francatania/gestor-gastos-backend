@@ -21,6 +21,12 @@ router.get(
   spentController.getSpentsByDateRange
 );
 
+router.get(
+  '/spents/:id',
+  passport.authenticate('jwt', { session: false }),
+  spentController.getSpentById
+);
+
 /*
 
 router.get('/spents/:id', passport.authenticate('jwt',{session:false} ), async (req, res)=>{

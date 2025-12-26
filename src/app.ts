@@ -14,6 +14,7 @@ import transfersRouter from './routers/transfers.router.js';
 import passport from 'passport';
 import { init as initPassportConfig } from './config/passport.config.js';
 import { __dirname } from './utils.js';
+import mongoose from 'mongoose';
 
 const app = express();
 

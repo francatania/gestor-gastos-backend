@@ -8,7 +8,7 @@ import mongoose, {
 const spentSchema = new Schema({
     accountId:{type: mongoose.Schema.Types.ObjectId, ref: 'accounts', required:true},
     category: {type: String},
-    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'spentscategories' },
+    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'spentsCategories' },
     description: {type: String, required:true},
     date: {type: Date, required:true},
     amount: {type: Number, required:true},
