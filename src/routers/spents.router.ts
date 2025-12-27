@@ -27,6 +27,12 @@ router.get(
   spentController.getSpentById
 );
 
+router.patch(
+    '/spents/:id',
+    passport.authenticate('jwt', { session: false }),
+    spentController.updateSpent
+)
+
 /*
 
 router.get('/spents/:id', passport.authenticate('jwt',{session:false} ), async (req, res)=>{

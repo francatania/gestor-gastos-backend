@@ -1,5 +1,6 @@
+import mongoose from "mongoose";
 import SpentDao from "../dao/spent.dao";
-import { RequestSpentDTO } from "../dto/request/spents/request-spent.dto";
+import { RequestSpentDTO, RequestUpdateSpent } from "../dto/request/spents/request-spent.dto";
 import { RequestSpentList } from "../dto/request/spents/request-spents-list";
 import { BaseResponseSpent, ResponseSpentDetail, ResponseSpentList } from "../dto/response/spents/response-spent.dto";
 import { SpentMapper } from "../mappers/spent.mapper.js";
@@ -56,6 +57,32 @@ export class SpentService{
             return SpentMapper.toDetailDto(spent);
         } catch (error) {
             console.error('Error while retrieving the spents',error);
+             throw error;
+        }
+    }
+
+    async updateSpentById(spentId: string, data: RequestUpdateSpent){
+        try {
+
+
+            const updatedData: Partial<SpentDocument> = {
+                accountId: data.accountId ?  
+                new mongoose.Types.ObjectId(data.accountId)
+                : undefined,
+                amount: data.amount ? data.amount : undefined,
+                categoryId: data.categoryId ? 
+                new mongoose.Types.ObjectId(data.categoryId)
+                : undefined,
+                description: data.description ? data.description : undefined              
+            }
+
+            const result = await this.spentDao.findByIdAndUpdate(spentId, updatedData);
+            if(result == null){
+                throw new Error('Could not find the spent.');
+            }
+            return SpentMapper.toDetailDto(result);
+        } catch (error) {
+            console.error('Error while updating the spents',error);
              throw error;
         }
     }

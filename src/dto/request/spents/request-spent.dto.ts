@@ -6,3 +6,11 @@ export interface RequestSpentDTO{
     date: string,
     description: string
 }
+
+export interface RequestUpdateSpent{
+    accountId?: string,
+    amount?: number,
+    categoryId?: string,
+    date?: string,
+    description?: string
+}

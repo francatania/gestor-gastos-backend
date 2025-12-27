@@ -1,5 +1,5 @@
 import SpentDao from "../dao/spent.dao.js";
-import { RequestSpentDTO } from "../dto/request/spents/request-spent.dto.js";
+import { RequestSpentDTO, RequestUpdateSpent } from "../dto/request/spents/request-spent.dto.js";
 import { RequestSpentList } from "../dto/request/spents/request-spents-list.js";
 import { SpentService } from "../services/spent.service.js";
 import AccountController from "./account.controller.js";
@@ -43,6 +43,21 @@ export default class SpentController{
         } catch (error: any) {
             console.error(error);
              return res.status(400).json({ message: error.message ?? 'Error' });
+        }
+    }
+
+    updateSpent = async(req: Request, res: Response)=>{
+        try {
+            const id: string = req.params.id;
+            const data: RequestUpdateSpent = req.body;
+
+            const result = await this.spentService.updateSpentById(id, data);
+            return res.status(201).json(result);
+        } catch (error: any) {
+            
+            console.error(error);
+            return res.status(400).json({ message: error.message ?? 'Error' });
+            
         }
     }
 

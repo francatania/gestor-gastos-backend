@@ -29,10 +29,18 @@ export default class SpentDao{
     async getByAccount(accountId: string): Promise<SpentDocument[] | []>{
         return await spentModel.find({ accountId: { $in: accountId } })
     }
-    
-    async delete(){
-        return spentModel.deleteMany();
+
+    async findByIdAndUpdate(spentId: string, data: Partial<SpentDocument>): Promise<SpentLean | null>{
+        return await spentModel.findByIdAndUpdate(
+            spentId,
+            { $set: data },
+            { new: true }
+        )        
+        .populate('accountId', 'accountName')      
+        .populate('categoryId', 'category')
+        .lean()
     }
+    
 
     async deleteById(id: string){
         return spentModel.deleteOne({_id: id});
