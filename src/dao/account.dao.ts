@@ -60,4 +60,20 @@ export default class AccountDao {
       { new: true }
     );
   }
+
+  async addTransfer(accountId: string, transferId: string) {
+    return accountModel.findByIdAndUpdate(
+      accountId,
+      { $addToSet: { transfers: new mongoose.Types.ObjectId(transferId) } },
+      { new: true }
+    );
+  }
+
+  async removeTransfer(accountId: string, transferId: string) {
+    return accountModel.findByIdAndUpdate(
+      accountId,
+      { $pull: { transfers: new mongoose.Types.ObjectId(transferId) } },
+      { new: true }
+    );
+  }
 }
