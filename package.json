@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "test": "npm run build && node --test tests/*.test.mjs",
     "start": "node -r dotenv/config dist/server.js",
     "dev": "concurrently \"npm:watch-ts\" \"npm:watch-node\"",
     "watch-ts": "tsc --watch",
