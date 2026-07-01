@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { accountModel } from '../models/accounts.model.js';
 import { RequestAccountDTO } from '../dto/request/request-account.dto.js';
 import { AccountDocument } from '../models/accounts.model.js';
@@ -26,5 +27,21 @@ export default class AccountDao {
 
   async deleteById(id: string) {
     return accountModel.deleteOne({ _id: id });
+  }
+
+  async addSpent(accountId: string, spentId: string) {
+    return accountModel.findByIdAndUpdate(
+      accountId,
+      { $addToSet: { spents: new mongoose.Types.ObjectId(spentId) } },
+      { new: true }
+    );
+  }
+
+  async removeSpent(accountId: string, spentId: string) {
+    return accountModel.findByIdAndUpdate(
+      accountId,
+      { $pull: { spents: new mongoose.Types.ObjectId(spentId) } },
+      { new: true }
+    );
   }
 }
