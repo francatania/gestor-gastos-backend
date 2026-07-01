@@ -44,4 +44,20 @@ export default class AccountDao {
       { new: true }
     );
   }
+
+  async addIncome(accountId: string, incomeId: string) {
+    return accountModel.findByIdAndUpdate(
+      accountId,
+      { $addToSet: { incomes: new mongoose.Types.ObjectId(incomeId) } },
+      { new: true }
+    );
+  }
+
+  async removeIncome(accountId: string, incomeId: string) {
+    return accountModel.findByIdAndUpdate(
+      accountId,
+      { $pull: { incomes: new mongoose.Types.ObjectId(incomeId) } },
+      { new: true }
+    );
+  }
 }
