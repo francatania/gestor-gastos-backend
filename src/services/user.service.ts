@@ -5,10 +5,10 @@ import { RequestAccountDTO } from '../dto/request/request-account.dto';
 import { AccountService } from './account.service';
 import { ResponseUserCreatedDTO } from '../dto/response/response-user-created.dto';
 import { ResponseAccountDTO } from '../dto/response/account-created';
-import { AccountMapper } from '../mappers/account.mapper.js';
 import { UserMapper } from '../mappers/user-mapper.js';
 import { RequestLoginDTO } from '../dto/request/request-login.dto';
 import { ResponseLoginDTO } from '../dto/response/response-login';
+import { AppError } from '../errors/app-error.js';
 import { tokenGenerator, verifyPassword } from '../utils.js';
 
 export class UserService {
@@ -24,12 +24,14 @@ export class UserService {
     } = data;
 
     if (!first_name || !last_name || !email || !password) {
-      throw new Error('All fields are required.');
+      throw AppError.validation('All fields are required.', {
+        required: ['first_name', 'last_name', 'email', 'password'],
+      });
     }
     const existingUser: UserDocument | null = await this.userDao.getByEmail(email);
 
     if (existingUser) {
-      throw new Error('User already exists.');
+      throw AppError.conflict('User already exists.');
     }
 
     let user: UserDocument | null = null;
@@ -53,7 +55,7 @@ export class UserService {
             this.accountService.create(secondAccount),
           ]);
 
-          const accounts: ResponseAccountDTO[] = createdAccounts.map(AccountMapper.toDto);
+          const accounts: ResponseAccountDTO[] = createdAccounts;
 
           return UserMapper.toDto(user, accounts);
 
@@ -69,16 +71,16 @@ export class UserService {
         const {email, password} = data;
 
         if(!email || !password){
-            throw new Error('Invalid credentials.');
+            throw AppError.validation('Invalid credentials.');
         }
         const user: UserDocument | null = await this.userDao.getByEmail(email);
         if(!user){
-            throw new Error('Invalid credentials.');}
+            throw AppError.unauthorized('Invalid credentials.');}
 
         const isValidPass: boolean = verifyPassword(password, user);
 
         if(!isValidPass){
-            throw new Error('Invalid credentials.');}
+            throw AppError.unauthorized('Invalid credentials.');}
 
         return tokenGenerator(user);
   }
