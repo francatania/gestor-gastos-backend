@@ -8,8 +8,7 @@
     "moduleResolution": "node",
 
 
-    "allowJs": true,
-    "checkJs": false,
+    "allowJs": false,
 
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
