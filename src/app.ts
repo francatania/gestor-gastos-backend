@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import path from 'path';
 import cors from 'cors';
 
@@ -10,10 +10,12 @@ import spentsCategoriesRouter from './routers/spents.categories.router.js';
 import incomesCategoriesRouter from './routers/incomes.categories.router.js';
 import accountsRouter from './routers/accounts.router.js';
 import transfersRouter from './routers/transfers.router.js';
+import v2Router from './routers/v2/index.router.js';
 
 import passport from 'passport';
 import { init as initPassportConfig } from './config/passport.config.js';
 import { __dirname } from './utils.js';
+import { errorMiddleware } from './middlewares/error.middleware.js';
 
 const app = express();
 
@@ -33,6 +35,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 initPassportConfig();
 app.use(passport.initialize());
 
+app.use('/api/v2', v2Router);
+
 app.use(
   '/api',
   usersRouter,
@@ -45,10 +49,6 @@ app.use(
   transfersRouter
 );
 
-app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-  const message = `Ha ocurrido un error desconocido: ${error.message}`;
-  console.log(message);
-  res.status(500).json({ status: 'error', message });
-});
+app.use(errorMiddleware);
 
 export default app;
