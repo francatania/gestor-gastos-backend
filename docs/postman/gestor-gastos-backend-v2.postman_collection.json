@@ -1,0 +1,213 @@
+{
+  "info": {
+    "_postman_id": "1d3f99cc-7d7d-4e2e-9ee7-gestor-gastos-v2",
+    "name": "Gestor Gastos Backend v2",
+    "description": "Coleccion para probar la API v2 del backend. Configurar baseUrl, userId, accountId y otros ids segun corresponda.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v2" },
+    { "key": "accessToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "accountId", "value": "" },
+    { "key": "secondAccountId", "value": "" },
+    { "key": "spentId", "value": "" },
+    { "key": "incomeId", "value": "" },
+    { "key": "transferId", "value": "" },
+    { "key": "spentCategoryId", "value": "" },
+    { "key": "incomeCategoryId", "value": "" },
+    { "key": "startDate", "value": "2026-01-01" },
+    { "key": "endDate", "value": "2026-12-31" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{accessToken}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Franco\",\n  \"last_name\": \"Test\",\n  \"email\": \"franco.test@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const token = json.data?.accessToken;",
+                  "if (token) pm.collectionVariables.set('accessToken', token);",
+                  "if (token) {",
+                  "  const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());",
+                  "  pm.collectionVariables.set('userId', payload._id);",
+                  "  if (payload.accounts?.[0]) pm.collectionVariables.set('accountId', payload.accounts[0]);",
+                  "  if (payload.accounts?.[1]) pm.collectionVariables.set('secondAccountId', payload.accounts[1]);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"franco.test@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "Create Account",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["const json = pm.response.json();", "if (json.data?.id) pm.collectionVariables.set('secondAccountId', json.data.id);"] }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/accounts",
+            "body": { "mode": "raw", "raw": "{\n  \"accountName\": \"Cuenta test\",\n  \"userId\": \"{{userId}}\"\n}" }
+          }
+        },
+        { "name": "Get Accounts By User", "request": { "method": "GET", "url": "{{baseUrl}}/accounts?userId={{userId}}" } },
+        { "name": "Get Account By Id", "request": { "method": "GET", "url": "{{baseUrl}}/accounts/{{accountId}}" } },
+        { "name": "Delete Account", "request": { "method": "DELETE", "url": "{{baseUrl}}/accounts/{{secondAccountId}}" } }
+      ]
+    },
+    {
+      "name": "Spents",
+      "item": [
+        {
+          "name": "Create Spent",
+          "event": [{ "listen": "test", "script": { "exec": ["const json = pm.response.json();", "if (json.data?.id) pm.collectionVariables.set('spentId', json.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/spents",
+            "body": { "mode": "raw", "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"category\": \"Comida\",\n  \"description\": \"Almuerzo\",\n  \"date\": \"2026-01-10\",\n  \"amount\": 1500\n}" }
+          }
+        },
+        { "name": "Get Spents By Account", "request": { "method": "GET", "url": "{{baseUrl}}/spents?accountId={{accountId}}" } },
+        { "name": "Get Spents By Range", "request": { "method": "GET", "url": "{{baseUrl}}/spents/range?accountId={{accountId}}&startDate={{startDate}}&endDate={{endDate}}" } },
+        { "name": "Get Spent By Id", "request": { "method": "GET", "url": "{{baseUrl}}/spents/{{spentId}}" } },
+        {
+          "name": "Update Spent",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/spents/{{spentId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Almuerzo actualizado\",\n  \"amount\": 1750\n}" }
+          }
+        },
+        { "name": "Delete Spent", "request": { "method": "DELETE", "url": "{{baseUrl}}/spents/{{spentId}}?accountId={{accountId}}" } }
+      ]
+    },
+    {
+      "name": "Incomes",
+      "item": [
+        {
+          "name": "Create Income",
+          "event": [{ "listen": "test", "script": { "exec": ["const json = pm.response.json();", "if (json.data?.id) pm.collectionVariables.set('incomeId', json.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/incomes",
+            "body": { "mode": "raw", "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"category\": \"Sueldo\",\n  \"description\": \"Sueldo mensual\",\n  \"date\": \"2026-01-05\",\n  \"amount\": 100000\n}" }
+          }
+        },
+        { "name": "Get Incomes By Account", "request": { "method": "GET", "url": "{{baseUrl}}/incomes?accountId={{accountId}}" } },
+        { "name": "Get Incomes By Range", "request": { "method": "GET", "url": "{{baseUrl}}/incomes/range?accountId={{accountId}}&startDate={{startDate}}&endDate={{endDate}}" } },
+        { "name": "Get Income By Id", "request": { "method": "GET", "url": "{{baseUrl}}/incomes/{{incomeId}}" } },
+        {
+          "name": "Update Income",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/incomes/{{incomeId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Sueldo actualizado\",\n  \"amount\": 110000\n}" }
+          }
+        },
+        { "name": "Delete Income", "request": { "method": "DELETE", "url": "{{baseUrl}}/incomes/{{incomeId}}?accountId={{accountId}}" } }
+      ]
+    },
+    {
+      "name": "Transfers",
+      "item": [
+        {
+          "name": "Create Transfer",
+          "event": [{ "listen": "test", "script": { "exec": ["const json = pm.response.json();", "if (json.data?.id) pm.collectionVariables.set('transferId', json.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/transfers",
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"accountId\": \"{{accountId}}\",\n  \"fromName\": \"Origen\",\n  \"to\": \"{{secondAccountId}}\",\n  \"toName\": \"Destino\",\n  \"date\": \"2026-01-12\",\n  \"amount\": 5000\n}" }
+          }
+        },
+        { "name": "Get Transfers By Account", "request": { "method": "GET", "url": "{{baseUrl}}/transfers?accountId={{accountId}}" } },
+        { "name": "Get All Transfers", "request": { "method": "GET", "url": "{{baseUrl}}/transfers/all" } },
+        { "name": "Get Transfers By Range", "request": { "method": "GET", "url": "{{baseUrl}}/transfers/range?accountId={{accountId}}&startDate={{startDate}}&endDate={{endDate}}" } },
+        { "name": "Get Transfers By User", "request": { "method": "GET", "url": "{{baseUrl}}/transfers/users/{{userId}}" } },
+        { "name": "Get Transfer By Id", "request": { "method": "GET", "url": "{{baseUrl}}/transfers/{{transferId}}" } }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Create Spent Category",
+          "event": [{ "listen": "test", "script": { "exec": ["const json = pm.response.json();", "if (json.data?.id) pm.collectionVariables.set('spentCategoryId', json.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/spents-categories",
+            "body": { "mode": "raw", "raw": "{\n  \"category\": \"Comida\",\n  \"userId\": \"{{userId}}\"\n}" }
+          }
+        },
+        { "name": "Get Spent Categories", "request": { "method": "GET", "url": "{{baseUrl}}/spents-categories" } },
+        { "name": "Get Spent Categories For User", "request": { "method": "GET", "url": "{{baseUrl}}/spents-categories/users/{{userId}}" } },
+        { "name": "Delete Spent Category", "request": { "method": "DELETE", "url": "{{baseUrl}}/spents-categories/{{spentCategoryId}}" } },
+        {
+          "name": "Create Income Category",
+          "event": [{ "listen": "test", "script": { "exec": ["const json = pm.response.json();", "if (json.data?.id) pm.collectionVariables.set('incomeCategoryId', json.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/incomes-categories",
+            "body": { "mode": "raw", "raw": "{\n  \"category\": \"Sueldo\"\n}" }
+          }
+        },
+        { "name": "Get Income Categories", "request": { "method": "GET", "url": "{{baseUrl}}/incomes-categories" } },
+        { "name": "Delete Income Category", "request": { "method": "DELETE", "url": "{{baseUrl}}/incomes-categories/{{incomeCategoryId}}" } }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        { "name": "Account Summary", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/accounts/{{accountId}}/summary?startDate={{startDate}}&endDate={{endDate}}" } },
+        { "name": "User Accounts Summary", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/users/{{userId}}/accounts-summary?startDate={{startDate}}&endDate={{endDate}}" } }
+      ]
+    }
+  ]
+}

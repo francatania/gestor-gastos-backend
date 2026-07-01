@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import mongoose from 'mongoose';
 
 import { AccountService } from '../dist/services/account.service.js';
+import { AccountBalanceService } from '../dist/services/account-balance.service.js';
 import { DashboardService } from '../dist/services/dashboard.service.js';
 import { IncomeService } from '../dist/services/income.service.js';
 import { SpentService } from '../dist/services/spent.service.js';
@@ -58,7 +59,7 @@ test('AccountService rejects duplicate account names for the same user', async (
 });
 
 test('SpentService validates that a spent has a category or categoryId', async () => {
-  const service = new SpentService({}, {});
+  const service = new SpentService({}, {}, {});
 
   await assert.rejects(
     () => service.create({
@@ -69,6 +70,71 @@ test('SpentService validates that a spent has a category or categoryId', async (
     }),
     (error) => error.code === 'VALIDATION_ERROR' && error.statusCode === 400
   );
+});
+
+test('SpentService rejects a spent that would leave a negative balance', async () => {
+  const accountId = objectId().toString();
+  const service = new SpentService(
+    {},
+    {},
+    {
+      ensureCanSpend: async () => {
+        const error = new Error('Insufficient account balance.');
+        error.code = 'VALIDATION_ERROR';
+        error.statusCode = 400;
+        throw error;
+      },
+    }
+  );
+
+  await assert.rejects(
+    () => service.create({
+      accountId,
+      amount: 500,
+      category: 'Food',
+      description: 'Lunch',
+      date: '2026-01-01',
+    }),
+    (error) => error.code === 'VALIDATION_ERROR' && error.statusCode === 400
+  );
+});
+
+test('AccountBalanceService calculates current balance', async () => {
+  const accountId = objectId();
+  const otherAccountId = objectId();
+  const service = new AccountBalanceService(
+    {
+      getById: async () => ({ _id: accountId }),
+    },
+    {
+      getByAccount: async () => [
+        spent(accountId, 100, 'Food', '2026-01-05'),
+        spent(accountId, 50, 'Transport', '2025-12-10'),
+      ],
+    },
+    {
+      getByAccount: async () => [
+        income(accountId, 1000, 'Salary', '2026-01-01'),
+        income(accountId, 300, 'Bonus', '2025-12-01'),
+      ],
+    },
+    {
+      getByAccount: async () => [
+        transfer(accountId, otherAccountId, 200, '2026-01-07'),
+        transfer(otherAccountId, accountId, 75, '2025-12-15'),
+      ],
+    }
+  );
+
+  const result = await service.getCurrentBalance(accountId.toString());
+
+  assert.deepEqual(result, {
+    incomes: 1300,
+    spents: 150,
+    incomingTransfers: 75,
+    outgoingTransfers: 200,
+    balance: 1025,
+  });
 });
 
 test('IncomeService rolls back created income when the account does not exist', async () => {
@@ -151,6 +217,16 @@ test('DashboardService returns all-time balance and period summary separately', 
     accountName: 'Cash',
   };
 
+  const accountBalanceService = {
+    getCurrentBalance: async () => ({
+      incomes: 1300,
+      spents: 150,
+      incomingTransfers: 75,
+      outgoingTransfers: 200,
+      balance: 1025,
+    }),
+  };
+
   const service = new DashboardService(
     {
       getById: async () => account,
@@ -174,14 +250,11 @@ test('DashboardService returns all-time balance and period summary separately', 
       ],
     },
     {
-      getByAccount: async () => [
-        transfer(accountId, otherAccountId, 200, '2026-01-07'),
-        transfer(otherAccountId, accountId, 75, '2025-12-15'),
-      ],
       getByDateRangeAndAccount: async () => [
         transfer(accountId, otherAccountId, 200, '2026-01-07'),
       ],
-    }
+    },
+    accountBalanceService
   );
 
   const result = await service.getAccountSummary(accountId.toString(), {
@@ -241,8 +314,16 @@ test('DashboardService returns compact summaries for all user accounts', async (
       ],
     },
     {
-      getByAccount: async () => [],
       getByDateRangeAndAccount: async () => [],
+    },
+    {
+      getCurrentBalance: async () => ({
+        incomes: 100,
+        spents: 10,
+        incomingTransfers: 0,
+        outgoingTransfers: 0,
+        balance: 90,
+      }),
     }
   );
 
@@ -259,7 +340,7 @@ test('DashboardService returns compact summaries for all user accounts', async (
 });
 
 test('DashboardService rejects invalid account ids', async () => {
-  const service = new DashboardService({}, {}, {}, {});
+  const service = new DashboardService({}, {}, {}, {}, {});
 
   await assert.rejects(
     () => service.getAccountSummary('invalid-id', {

@@ -14,15 +14,18 @@ import {
 import { AppError } from '../errors/app-error.js';
 import { SpentMapper } from '../mappers/spent.mapper.js';
 import { SpentDocument } from '../models/spent.model.js';
+import { AccountBalanceService } from './account-balance.service.js';
 
 export class SpentService {
   constructor(
     private readonly spentDao: SpentDao,
-    private readonly accountDao: AccountDao
+    private readonly accountDao: AccountDao,
+    private readonly accountBalanceService: AccountBalanceService
   ) {}
 
   async create(data: RequestSpentDTO): Promise<BaseResponseSpentDTO> {
     this.validateCreateRequest(data);
+    await this.accountBalanceService.ensureCanSpend(data.accountId, data.amount);
 
     const document = SpentMapper.toModel(data);
     const spent = await this.spentDao.create(document);

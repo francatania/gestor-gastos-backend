@@ -16,6 +16,7 @@ import { SpentLean } from '../dto/types/spents.types.js';
 import { TransferLean } from '../dto/types/transfers.types.js';
 import { AppError } from '../errors/app-error.js';
 import { AccountDocument } from '../models/accounts.model.js';
+import { AccountBalanceService } from './account-balance.service.js';
 
 type DateRange = {
   startDate: string;
@@ -27,7 +28,8 @@ export class DashboardService {
     private readonly accountDao: AccountDao,
     private readonly spentDao: SpentDao,
     private readonly incomeDao: IncomeDao,
-    private readonly transferDao: TransferDao
+    private readonly transferDao: TransferDao,
+    private readonly accountBalanceService: AccountBalanceService
   ) {}
 
   async getAccountSummary(
@@ -44,27 +46,16 @@ export class DashboardService {
     }
 
     const [
-      allTimeSpents,
-      allTimeIncomes,
-      allTimeTransfers,
       periodSpents,
       periodIncomes,
       periodTransfers,
     ] = await Promise.all([
-      this.spentDao.getByAccount(accountId),
-      this.incomeDao.getByAccount(accountId),
-      this.transferDao.getByAccount(accountId),
       this.spentDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
       this.incomeDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
       this.transferDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
     ]);
 
-    const currentBalance = this.buildCurrentBalance(
-      accountId,
-      allTimeIncomes,
-      allTimeSpents,
-      allTimeTransfers
-    );
+    const currentBalance = await this.accountBalanceService.getCurrentBalance(accountId);
     const periodTotals = this.buildPeriodTotals(
       accountId,
       periodIncomes,
@@ -102,27 +93,16 @@ export class DashboardService {
       accounts.map(async (account) => {
         const accountId = account._id.toString();
         const [
-          allTimeSpents,
-          allTimeIncomes,
-          allTimeTransfers,
           periodSpents,
           periodIncomes,
           periodTransfers,
         ] = await Promise.all([
-          this.spentDao.getByAccount(accountId),
-          this.incomeDao.getByAccount(accountId),
-          this.transferDao.getByAccount(accountId),
           this.spentDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
           this.incomeDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
           this.transferDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
         ]);
 
-        const currentBalance = this.buildCurrentBalance(
-          accountId,
-          allTimeIncomes,
-          allTimeSpents,
-          allTimeTransfers
-        );
+        const currentBalance = await this.accountBalanceService.getCurrentBalance(accountId);
         const periodTotals = this.buildPeriodTotals(
           accountId,
           periodIncomes,
@@ -139,26 +119,6 @@ export class DashboardService {
         };
       })
     );
-  }
-
-  private buildCurrentBalance(
-    accountId: string,
-    incomes: IncomeLean[],
-    spents: SpentLean[],
-    transfers: TransferLean[]
-  ): CurrentBalanceDTO {
-    const incomesTotal = this.sumAmounts(incomes);
-    const spentsTotal = this.sumAmounts(spents);
-    const { incomingTransfers, outgoingTransfers } =
-      this.calculateTransferTotals(accountId, transfers);
-
-    return {
-      incomes: incomesTotal,
-      spents: spentsTotal,
-      incomingTransfers,
-      outgoingTransfers,
-      balance: incomesTotal - spentsTotal + incomingTransfers - outgoingTransfers,
-    };
   }
 
   private buildPeriodTotals(
