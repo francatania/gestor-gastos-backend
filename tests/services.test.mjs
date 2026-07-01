@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import mongoose from 'mongoose';
 
 import { AccountService } from '../dist/services/account.service.js';
+import { DashboardService } from '../dist/services/dashboard.service.js';
 import { IncomeService } from '../dist/services/income.service.js';
 import { SpentService } from '../dist/services/spent.service.js';
 import { TransferService } from '../dist/services/transfer.service.js';
@@ -140,4 +141,160 @@ test('TransferService associates a transfer with both accounts', async () => {
     addedTransfers.map((entry) => entry.accountId),
     [fromId, toId]
   );
+});
+
+test('DashboardService returns all-time balance and period summary separately', async () => {
+  const accountId = objectId();
+  const otherAccountId = objectId();
+  const account = {
+    _id: accountId,
+    accountName: 'Cash',
+  };
+
+  const service = new DashboardService(
+    {
+      getById: async () => account,
+    },
+    {
+      getByAccount: async () => [
+        spent(accountId, 100, 'Food', '2026-01-05'),
+        spent(accountId, 50, 'Transport', '2025-12-10'),
+      ],
+      getByDateRangeAndAccount: async () => [
+        spent(accountId, 100, 'Food', '2026-01-05'),
+      ],
+    },
+    {
+      getByAccount: async () => [
+        income(accountId, 1000, 'Salary', '2026-01-01'),
+        income(accountId, 300, 'Bonus', '2025-12-01'),
+      ],
+      getByDateRangeAndAccount: async () => [
+        income(accountId, 1000, 'Salary', '2026-01-01'),
+      ],
+    },
+    {
+      getByAccount: async () => [
+        transfer(accountId, otherAccountId, 200, '2026-01-07'),
+        transfer(otherAccountId, accountId, 75, '2025-12-15'),
+      ],
+      getByDateRangeAndAccount: async () => [
+        transfer(accountId, otherAccountId, 200, '2026-01-07'),
+      ],
+    }
+  );
+
+  const result = await service.getAccountSummary(accountId.toString(), {
+    startDate: '2026-01-01',
+    endDate: '2026-01-31',
+  });
+
+  assert.equal(result.account.id, accountId.toString());
+  assert.equal(result.currentBalance.incomes, 1300);
+  assert.equal(result.currentBalance.spents, 150);
+  assert.equal(result.currentBalance.incomingTransfers, 75);
+  assert.equal(result.currentBalance.outgoingTransfers, 200);
+  assert.equal(result.currentBalance.balance, 1025);
+  assert.deepEqual(result.period.totals, {
+    incomes: 1000,
+    spents: 100,
+    incomingTransfers: 0,
+    outgoingTransfers: 200,
+    net: 700,
+  });
+  assert.deepEqual(result.period.charts.spentsByCategory, [
+    { category: 'Food', amount: 100 },
+  ]);
+  assert.deepEqual(result.period.charts.incomesByCategory, [
+    { category: 'Salary', amount: 1000 },
+  ]);
+  assert.deepEqual(result.period.charts.spentsByMonth, [
+    { month: '2026-01', amount: 100 },
+  ]);
+  assert.deepEqual(result.period.charts.incomesByMonth, [
+    { month: '2026-01', amount: 1000 },
+  ]);
+});
+
+test('DashboardService returns compact summaries for all user accounts', async () => {
+  const userId = objectId();
+  const firstAccountId = objectId();
+  const secondAccountId = objectId();
+
+  const service = new DashboardService(
+    {
+      getByUserId: async () => [
+        { _id: firstAccountId, accountName: 'Cash' },
+        { _id: secondAccountId, accountName: 'Bank' },
+      ],
+    },
+    {
+      getByAccount: async (accountId) => [spent(accountId, 10, 'Food', '2026-01-03')],
+      getByDateRangeAndAccount: async (startDate, endDate, accountId) => [
+        spent(accountId, 10, 'Food', '2026-01-03'),
+      ],
+    },
+    {
+      getByAccount: async (accountId) => [income(accountId, 100, 'Salary', '2026-01-01')],
+      getByDateRangeAndAccount: async (startDate, endDate, accountId) => [
+        income(accountId, 100, 'Salary', '2026-01-01'),
+      ],
+    },
+    {
+      getByAccount: async () => [],
+      getByDateRangeAndAccount: async () => [],
+    }
+  );
+
+  const result = await service.getUserAccountsSummary(userId.toString(), {
+    startDate: '2026-01-01',
+    endDate: '2026-01-31',
+  });
+
+  assert.equal(result.length, 2);
+  assert.equal(result[0].currentBalance.balance, 90);
+  assert.equal(result[0].period.net, 90);
+  assert.equal(result[1].currentBalance.balance, 90);
+  assert.equal(result[1].period.net, 90);
+});
+
+test('DashboardService rejects invalid account ids', async () => {
+  const service = new DashboardService({}, {}, {}, {});
+
+  await assert.rejects(
+    () => service.getAccountSummary('invalid-id', {
+      startDate: '2026-01-01',
+      endDate: '2026-01-31',
+    }),
+    (error) => error.code === 'VALIDATION_ERROR' && error.statusCode === 400
+  );
+});
+
+const spent = (accountId, amount, category, date) => ({
+  _id: objectId(),
+  accountId,
+  category,
+  description: category,
+  date: new Date(`${date}T00:00:00.000Z`),
+  amount,
+});
+
+const income = (accountId, amount, category, date) => ({
+  _id: objectId(),
+  accountId,
+  category,
+  description: category,
+  date: new Date(`${date}T00:00:00.000Z`),
+  amount,
+});
+
+const transfer = (fromAccountId, toAccountId, amount, date) => ({
+  _id: objectId(),
+  userId: objectId(),
+  accountId: fromAccountId,
+  fromName: 'From',
+  to: toAccountId,
+  toName: 'To',
+  date: new Date(`${date}T00:00:00.000Z`),
+  amount,
 });
