@@ -40,7 +40,7 @@ export class TransferService {
   async getAll(): Promise<BaseResponseTransferDTO[]> {
     const transfers = await this.transferDao.get();
 
-    return transfers.map(TransferMapper.toDto);
+    return transfers.map((transfer) => TransferMapper.toDto(transfer));
   }
 
   async getByUser(userId: string): Promise<BaseResponseTransferDTO[]> {
@@ -48,7 +48,7 @@ export class TransferService {
 
     const transfers = await this.transferDao.getByUserId(userId);
 
-    return transfers.map(TransferMapper.toDto);
+    return transfers.map((transfer) => TransferMapper.toDto(transfer));
   }
 
   async getByAccount(accountId: string): Promise<BaseResponseTransferDTO[]> {
@@ -56,7 +56,7 @@ export class TransferService {
 
     const transfers = await this.transferDao.getByAccount(accountId);
 
-    return transfers.map(TransferMapper.toDto);
+    return transfers.map((transfer) => TransferMapper.toDto(transfer));
   }
 
   async getByDateRangeAndAccount(
@@ -76,7 +76,7 @@ export class TransferService {
       request.accountId
     );
 
-    return transfers.map(TransferMapper.toDto);
+    return transfers.map((transfer) => TransferMapper.toDto(transfer));
   }
 
   async getById(transferId: string): Promise<BaseResponseTransferDTO> {

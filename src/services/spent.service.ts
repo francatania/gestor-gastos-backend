@@ -47,7 +47,7 @@ export class SpentService {
 
     const spents = await this.spentDao.getByAccount(accountId);
 
-    return spents.map(SpentMapper.toListDto);
+    return spents.map((spent) => SpentMapper.toListDto(spent));
   }
 
   async getByDateRangeAndAccount(
@@ -67,7 +67,7 @@ export class SpentService {
       request.accountId
     );
 
-    return spents.map(SpentMapper.toListDto);
+    return spents.map((spent) => SpentMapper.toListDto(spent));
   }
 
   async getById(spentId: string): Promise<ResponseSpentDetailDTO> {

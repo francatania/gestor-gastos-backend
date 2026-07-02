@@ -44,7 +44,7 @@ export class IncomeService {
 
     const incomes = await this.incomeDao.getByAccount(accountId);
 
-    return incomes.map(IncomeMapper.toListDto);
+    return incomes.map((income) => IncomeMapper.toListDto(income));
   }
 
   async getByDateRangeAndAccount(
@@ -64,7 +64,7 @@ export class IncomeService {
       request.accountId
     );
 
-    return incomes.map(IncomeMapper.toListDto);
+    return incomes.map((income) => IncomeMapper.toListDto(income));
   }
 
   async getById(incomeId: string): Promise<ResponseIncomeDetailDTO> {
