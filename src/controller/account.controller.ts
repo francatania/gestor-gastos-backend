@@ -1,3 +1,4 @@
+import { authenticatedUserId } from '../http/identity.js';
 import { AccountService } from '../services/account.service.js';
 import { RequestAccountDTO } from '../dto/request/request-account.dto.js';
 import { Request, Response, NextFunction } from 'express';
@@ -9,7 +10,7 @@ export default class AccountController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body as RequestAccountDTO;
-      const account = await this.accountService.create(data);
+      const account = await this.accountService.create(data, authenticatedUserId(req));
 
       return created(res, account, 'Successfully created account.');
     } catch (error) {
@@ -19,7 +20,7 @@ export default class AccountController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const account = await this.accountService.getById(req.params.id);
+      const account = await this.accountService.getById(req.params.id, authenticatedUserId(req));
 
       return ok(res, account);
     } catch (error) {
@@ -30,7 +31,7 @@ export default class AccountController {
   getByUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.query.userId as string;
-      const accounts = await this.accountService.getByUserId(userId);
+      const accounts = await this.accountService.getByUserId(userId, authenticatedUserId(req));
 
       return ok(res, accounts);
     } catch (error) {
@@ -40,7 +41,7 @@ export default class AccountController {
 
   deleteById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await this.accountService.deleteById(req.params.id);
+      await this.accountService.deleteById(req.params.id, authenticatedUserId(req));
 
       return noContent(res);
     } catch (error) {

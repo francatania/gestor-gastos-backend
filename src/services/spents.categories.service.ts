@@ -1,60 +1,36 @@
-import mongoose from 'mongoose';
 import SpentsCategoriesDao from '../dao/spents.categories.dao.js';
 import { RequestCategoryDTO } from '../dto/request/categories/request-category.dto.js';
 import { ResponseCategoryDTO } from '../dto/response/categories/response-category.dto.js';
 import { AppError } from '../errors/app-error.js';
 import { CategoryMapper } from '../mappers/category.mapper.js';
+import { assertSameUser, validateId } from '../http/identity.js';
 
 export class SpentsCategoriesService {
   constructor(private readonly categoriesDao: SpentsCategoriesDao) {}
 
-  async create(data: RequestCategoryDTO): Promise<ResponseCategoryDTO> {
-    this.validateRequest(data);
-
-    const category = await this.categoriesDao.create(data);
-
-    return CategoryMapper.toDto(category);
+  async create(data: RequestCategoryDTO, userId: string): Promise<ResponseCategoryDTO> {
+    assertSameUser(data.userId, userId);
+    if (typeof data.category !== 'string' || !data.category.trim()) throw AppError.validation('Category is required.');
+    return CategoryMapper.toDto(await this.categoriesDao.create({ category: data.category, userId }));
   }
 
-  async getAll(): Promise<ResponseCategoryDTO[]> {
-    const categories = await this.categoriesDao.get();
-
-    return categories.map(CategoryMapper.toDto);
+  async getAll(userId: string): Promise<ResponseCategoryDTO[]> {
+    return this.getAvailableForUser(userId, userId);
   }
 
-  async getAvailableForUser(userId: string): Promise<ResponseCategoryDTO[]> {
-    this.validateObjectId(userId, 'User id is invalid.');
-
-    const categories = await this.categoriesDao.getAvailableForUser(userId);
-
-    return categories.map(CategoryMapper.toDto);
+  async getAvailableForUser(requestedUserId: string, userId: string): Promise<ResponseCategoryDTO[]> {
+    assertSameUser(requestedUserId, userId);
+    return (await this.categoriesDao.getAvailableForUser(userId)).map(CategoryMapper.toDto);
   }
 
-  async deleteById(id: string): Promise<void> {
-    this.validateObjectId(id, 'Category id is invalid.');
-
-    const result = await this.categoriesDao.deleteById(id);
-
-    if (result.deletedCount === 0) {
-      throw AppError.notFound('Category not found.');
-    }
-  }
-
-  private validateRequest(data: RequestCategoryDTO) {
-    if (!data.category) {
-      throw AppError.validation('Category is required.', {
-        required: ['category'],
-      });
-    }
-
-    if (data.userId) {
-      this.validateObjectId(data.userId, 'User id is invalid.');
-    }
-  }
-
-  private validateObjectId(id: string, message: string) {
-    if (!mongoose.isValidObjectId(id)) {
-      throw AppError.validation(message);
-    }
+  async deleteById(id: string, userId: string): Promise<void> {
+    validateId(id);
+    validateId(userId);
+    const category = await this.categoriesDao.getAvailableById(id, userId);
+    if (!category) throw AppError.notFound('Resource not found.');
+    if (!category.userId) throw AppError.forbidden('Global categories are read-only.');
+    if (await this.categoriesDao.isInUse(id)) throw AppError.conflict('Category is in use.');
+    const result = await this.categoriesDao.deleteById(id, userId);
+    if (!result.deletedCount) throw AppError.notFound('Resource not found.');
   }
 }

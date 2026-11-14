@@ -14,17 +14,17 @@ export class AccountBalanceService {
     private readonly transferDao: TransferDao
   ) {}
 
-  async getCurrentBalance(accountId: string): Promise<CurrentBalanceDTO> {
-    const account = await this.accountDao.getById(accountId);
+  async getCurrentBalance(accountId: string, userId: string): Promise<CurrentBalanceDTO> {
+    const account = await this.accountDao.getById(accountId, userId);
 
     if (!account) {
-      throw AppError.notFound('Account not found.');
+      throw AppError.notFound('Resource not found.');
     }
 
     const [spents, incomes, transfers] = await Promise.all([
-      this.spentDao.getByAccount(accountId),
-      this.incomeDao.getByAccount(accountId),
-      this.transferDao.getByAccount(accountId),
+      this.spentDao.getByAccount(accountId, userId),
+      this.incomeDao.getByAccount(accountId, userId),
+      this.transferDao.getByAccount(accountId, userId),
     ]);
 
     const incomesTotal = this.sumAmounts(incomes);
@@ -41,8 +41,8 @@ export class AccountBalanceService {
     };
   }
 
-  async ensureCanSpend(accountId: string, amount: number): Promise<void> {
-    const currentBalance = await this.getCurrentBalance(accountId);
+  async ensureCanSpend(accountId: string, amount: number, userId: string): Promise<void> {
+    const currentBalance = await this.getCurrentBalance(accountId, userId);
 
     if (currentBalance.balance - amount < 0) {
       throw AppError.validation('Insufficient account balance.', {
@@ -55,11 +55,11 @@ export class AccountBalanceService {
   private calculateTransferTotals(accountId: string, transfers: TransferLean[]) {
     return transfers.reduce(
       (totals, transfer) => {
-        if (this.getRefId(transfer.accountId) === accountId) {
+        if (this.getRefId(transfer.accountId) === accountId.toLowerCase()) {
           totals.outgoingTransfers += transfer.amount;
         }
 
-        if (this.getRefId(transfer.to) === accountId) {
+        if (this.getRefId(transfer.to) === accountId.toLowerCase()) {
           totals.incomingTransfers += transfer.amount;
         }
 

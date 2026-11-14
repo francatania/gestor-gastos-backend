@@ -1,3 +1,4 @@
+import { authenticatedUserId } from '../http/identity.js';
 import { NextFunction, Request, Response } from 'express';
 import { ok } from '../http/responses.js';
 import { DashboardService } from '../services/dashboard.service.js';
@@ -16,7 +17,8 @@ export default class DashboardController {
         {
           startDate: req.query.startDate as string,
           endDate: req.query.endDate as string,
-        }
+        },
+        authenticatedUserId(req)
       );
 
       return ok(res, summary);
@@ -36,7 +38,8 @@ export default class DashboardController {
         {
           startDate: req.query.startDate as string,
           endDate: req.query.endDate as string,
-        }
+        },
+        authenticatedUserId(req)
       );
 
       return ok(res, summary);

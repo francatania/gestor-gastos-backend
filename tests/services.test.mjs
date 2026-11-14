@@ -10,9 +10,10 @@ import { SpentService } from '../dist/services/spent.service.js';
 import { TransferService } from '../dist/services/transfer.service.js';
 
 const objectId = () => new mongoose.Types.ObjectId();
+const actor = objectId().toString();
 
 test('AccountService creates an account response DTO', async () => {
-  const userId = objectId().toString();
+  const userId = actor;
   const accountId = objectId();
   const createdAt = new Date('2026-01-01T00:00:00.000Z');
   const updatedAt = new Date('2026-01-02T00:00:00.000Z');
@@ -34,14 +35,11 @@ test('AccountService creates an account response DTO', async () => {
   const result = await service.create({
     accountName: 'Cash',
     userId,
-  });
+  }, actor);
 
   assert.deepEqual(result, {
     id: accountId.toString(),
     accountName: 'Cash',
-    incomes: [],
-    spents: [],
-    transfers: [],
     createdAt: createdAt.toISOString(),
     updatedAt: updatedAt.toISOString(),
   });
@@ -53,13 +51,13 @@ test('AccountService rejects duplicate account names for the same user', async (
   });
 
   await assert.rejects(
-    () => service.create({ accountName: 'Cash', userId: objectId().toString() }),
+    () => service.create({ accountName: 'Cash', userId: actor }, actor),
     (error) => error.code === 'CONFLICT' && error.statusCode === 409
   );
 });
 
 test('SpentService validates that a spent has a category or categoryId', async () => {
-  const service = new SpentService({}, {}, {});
+  const service = new SpentService({}, {}, {}, {});
 
   await assert.rejects(
     () => service.create({
@@ -67,7 +65,7 @@ test('SpentService validates that a spent has a category or categoryId', async (
       amount: 100,
       description: 'Lunch',
       date: '2026-01-01',
-    }),
+    }, actor),
     (error) => error.code === 'VALIDATION_ERROR' && error.statusCode === 400
   );
 });
@@ -76,7 +74,7 @@ test('SpentService rejects a spent that would leave a negative balance', async (
   const accountId = objectId().toString();
   const service = new SpentService(
     {},
-    {},
+    { requireOwned: async () => ({ _id: accountId }) },
     {
       ensureCanSpend: async () => {
         const error = new Error('Insufficient account balance.');
@@ -84,7 +82,8 @@ test('SpentService rejects a spent that would leave a negative balance', async (
         error.statusCode = 400;
         throw error;
       },
-    }
+    },
+    {}
   );
 
   await assert.rejects(
@@ -94,7 +93,7 @@ test('SpentService rejects a spent that would leave a negative balance', async (
       category: 'Food',
       description: 'Lunch',
       date: '2026-01-01',
-    }),
+    }, actor),
     (error) => error.code === 'VALIDATION_ERROR' && error.statusCode === 400
   );
 });
@@ -126,7 +125,7 @@ test('AccountBalanceService calculates current balance', async () => {
     }
   );
 
-  const result = await service.getCurrentBalance(accountId.toString());
+  const result = await service.getCurrentBalance(accountId.toString(), actor);
 
   assert.deepEqual(result, {
     incomes: 1300,
@@ -137,39 +136,23 @@ test('AccountBalanceService calculates current balance', async () => {
   });
 });
 
-test('IncomeService rolls back created income when the account does not exist', async () => {
-  let deletedIncomeId = null;
-
-  const incomeDao = {
-    create: async (doc) => doc,
-    deleteById: async (id) => {
-      deletedIncomeId = id;
-      return { deletedCount: 1 };
+test('IncomeService checks ownership before creating an income', async () => {
+  let writes = 0;
+  const service = new IncomeService({ create: async () => { writes++; } }, {
+    requireOwned: async () => {
+      const error = new Error('Resource not found.');
+      error.code = 'NOT_FOUND'; error.statusCode = 404;
+      throw error;
     },
-  };
-
-  const accountDao = {
-    addIncome: async () => null,
-  };
-
-  const service = new IncomeService(incomeDao, accountDao);
-
-  await assert.rejects(
-    () => service.create({
-      accountId: objectId().toString(),
-      amount: 2500,
-      category: 'Salary',
-      description: 'January salary',
-      date: '2026-01-01',
-    }),
-    (error) => error.code === 'NOT_FOUND' && error.statusCode === 404
-  );
-
-  assert.equal(typeof deletedIncomeId, 'string');
+  });
+  await assert.rejects(() => service.create({ accountId: objectId().toString(), amount: 2500,
+    category: 'Salary', description: 'Salary', date: '2026-01-01' }, actor),
+    error => error.code === 'NOT_FOUND' && error.statusCode === 404);
+  assert.equal(writes, 0);
 });
 
 test('TransferService associates a transfer with both accounts', async () => {
-  const userId = objectId().toString();
+  const userId = actor;
   const fromId = objectId().toString();
   const toId = objectId().toString();
   const addedTransfers = [];
@@ -179,6 +162,7 @@ test('TransferService associates a transfer with both accounts', async () => {
   };
 
   const accountDao = {
+    requireOwned: async id => ({ _id: id, accountName: id === fromId ? 'Cash' : 'Bank' }),
     addTransfer: async (accountId, transferId) => {
       addedTransfers.push({ accountId, transferId });
       return { _id: accountId };
@@ -195,7 +179,7 @@ test('TransferService associates a transfer with both accounts', async () => {
     toName: 'Bank',
     date: '2026-01-01',
     amount: 500,
-  });
+  }, actor);
 
   assert.equal(result.userId, userId);
   assert.equal(result.from.id, fromId);
@@ -260,7 +244,7 @@ test('DashboardService returns all-time balance and period summary separately', 
   const result = await service.getAccountSummary(accountId.toString(), {
     startDate: '2026-01-01',
     endDate: '2026-01-31',
-  });
+  }, actor);
 
   assert.equal(result.account.id, accountId.toString());
   assert.equal(result.currentBalance.incomes, 1300);
@@ -290,7 +274,7 @@ test('DashboardService returns all-time balance and period summary separately', 
 });
 
 test('DashboardService returns compact summaries for all user accounts', async () => {
-  const userId = objectId();
+  const userId = new mongoose.Types.ObjectId(actor);
   const firstAccountId = objectId();
   const secondAccountId = objectId();
 
@@ -330,7 +314,7 @@ test('DashboardService returns compact summaries for all user accounts', async (
   const result = await service.getUserAccountsSummary(userId.toString(), {
     startDate: '2026-01-01',
     endDate: '2026-01-31',
-  });
+  }, actor);
 
   assert.equal(result.length, 2);
   assert.equal(result[0].currentBalance.balance, 90);
@@ -346,7 +330,7 @@ test('DashboardService rejects invalid account ids', async () => {
     () => service.getAccountSummary('invalid-id', {
       startDate: '2026-01-01',
       endDate: '2026-01-31',
-    }),
+    }, actor),
     (error) => error.code === 'VALIDATION_ERROR' && error.statusCode === 400
   );
 });
@@ -378,4 +362,31 @@ const transfer = (fromAccountId, toAccountId, amount, date) => ({
   toName: 'To',
   date: new Date(`${date}T00:00:00.000Z`),
   amount,
+});
+
+for (const [name, Service] of [['Income', IncomeService], ['Spent', SpentService]]) {
+  test(`${name}Service compensates its newly created document if the account disappears`, async () => {
+    let compensated = false;
+    const dao = { create: async doc => { doc.deleteOne = async () => { compensated = true; }; return doc; } };
+    const accounts = { requireOwned: async () => ({}), [`add${name}`]: async () => null };
+    const service = new Service(dao, accounts, { ensureCanSpend: async () => {} }, {});
+    await assert.rejects(() => service.create({ accountId: objectId().toString(), category: 'Test',
+      description: 'Test', date: '2026-01-01', amount: 1 }, actor), error => error.code === 'NOT_FOUND');
+    assert.equal(compensated, true);
+  });
+}
+
+test('TransferService compensates both references and its document when a destination disappears', async () => {
+  let compensated = false;
+  const removed = [];
+  const from = objectId().toString(), to = objectId().toString();
+  const service = new TransferService({ create: async doc => { doc.deleteOne = async () => { compensated = true; }; return doc; } }, {
+    requireOwned: async id => ({ _id: id, accountName: 'Test' }),
+    addTransfer: async id => id === from ? {} : null,
+    removeTransfer: async id => { removed.push(id); },
+  });
+  await assert.rejects(() => service.create({ userId: actor, accountId: from, to, date: '2026-01-01', amount: 1 }, actor),
+    error => error.code === 'NOT_FOUND');
+  assert.equal(compensated, true);
+  assert.deepEqual(removed.sort(), [from, to].sort());
 });

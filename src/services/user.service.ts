@@ -23,7 +23,7 @@ export class UserService {
       password,
     } = data;
 
-    if (!first_name || !last_name || !email || !password) {
+    if (![first_name, last_name, email, password].every(value => typeof value === 'string' && value.length > 0)) {
       throw AppError.validation('All fields are required.', {
         required: ['first_name', 'last_name', 'email', 'password'],
       });
@@ -37,7 +37,7 @@ export class UserService {
     let user: UserDocument | null = null;
 
     try {
-          user = await this.userDao.create(data);
+          user = await this.userDao.create({ first_name, last_name, email, password });
 
           const firstAccount: RequestAccountDTO = {
                 accountName: process.env.ACCOUNT_1,
@@ -51,8 +51,8 @@ export class UserService {
 
 
           const createdAccounts = await Promise.all([
-            this.accountService.create(firstAccount),
-            this.accountService.create(secondAccount),
+            this.accountService.create(firstAccount, user._id.toString()),
+            this.accountService.create(secondAccount, user._id.toString()),
           ]);
 
           const accounts: ResponseAccountDTO[] = createdAccounts;
@@ -70,7 +70,7 @@ export class UserService {
   async login(data: RequestLoginDTO): Promise<ResponseLoginDTO>{
         const {email, password} = data;
 
-        if(!email || !password){
+        if(typeof email !== 'string' || !email || typeof password !== 'string' || !password){
             throw AppError.validation('Invalid credentials.');
         }
         const user: UserDocument | null = await this.userDao.getByEmail(email);

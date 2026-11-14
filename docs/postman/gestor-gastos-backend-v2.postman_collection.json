@@ -2,12 +2,15 @@
   "info": {
     "_postman_id": "1d3f99cc-7d7d-4e2e-9ee7-gestor-gastos-v2",
     "name": "Gestor Gastos Backend v2",
-    "description": "Coleccion para probar la API v2 del backend. Configurar baseUrl, userId, accountId y otros ids segun corresponda.",
+    "description": "API v2 exclusiva (sin legacy). JWT requerido salvo auth. userId debe coincidir con el token. Listados limitados al propietario; globales de categorias solo lectura; PATCH no cambia cuenta; cuentas sin arrays de referencias. Configurar ids propios y foreignAccountId/foreignSpentId de otro usuario de prueba para casos negativos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080/api/v2" },
+    { "key": "legacyBaseUrl", "value": "http://localhost:8080/api" },
     { "key": "accessToken", "value": "" },
+    { "key": "foreignAccountId", "value": "" },
+    { "key": "foreignSpentId", "value": "" },
     { "key": "userId", "value": "" },
     { "key": "accountId", "value": "" },
     { "key": "secondAccountId", "value": "" },
@@ -166,7 +169,7 @@
           }
         },
         { "name": "Get Transfers By Account", "request": { "method": "GET", "url": "{{baseUrl}}/transfers?accountId={{accountId}}" } },
-        { "name": "Get All Transfers", "request": { "method": "GET", "url": "{{baseUrl}}/transfers/all" } },
+        { "name": "Get Own Transfers (all)", "request": { "method": "GET", "url": "{{baseUrl}}/transfers/all" } },
         { "name": "Get Transfers By Range", "request": { "method": "GET", "url": "{{baseUrl}}/transfers/range?accountId={{accountId}}&startDate={{startDate}}&endDate={{endDate}}" } },
         { "name": "Get Transfers By User", "request": { "method": "GET", "url": "{{baseUrl}}/transfers/users/{{userId}}" } },
         { "name": "Get Transfer By Id", "request": { "method": "GET", "url": "{{baseUrl}}/transfers/{{transferId}}" } }
@@ -189,8 +192,8 @@
         { "name": "Get Spent Categories For User", "request": { "method": "GET", "url": "{{baseUrl}}/spents-categories/users/{{userId}}" } },
         { "name": "Delete Spent Category", "request": { "method": "DELETE", "url": "{{baseUrl}}/spents-categories/{{spentCategoryId}}" } },
         {
-          "name": "Create Income Category",
-          "event": [{ "listen": "test", "script": { "exec": ["const json = pm.response.json();", "if (json.data?.id) pm.collectionVariables.set('incomeCategoryId', json.data.id);"] } }],
+          "name": "Create Income Category (expected 403)",
+          "event": [{ "listen": "test", "script": { "exec": ["const json = pm.response.json();", "pm.test('Global categories are read-only', () => pm.response.to.have.status(403));"] } }],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -199,7 +202,7 @@
           }
         },
         { "name": "Get Income Categories", "request": { "method": "GET", "url": "{{baseUrl}}/incomes-categories" } },
-        { "name": "Delete Income Category", "request": { "method": "DELETE", "url": "{{baseUrl}}/incomes-categories/{{incomeCategoryId}}" } }
+        { "name": "Delete Income Category (expected 403)", "request": { "method": "DELETE", "url": "{{baseUrl}}/incomes-categories/{{incomeCategoryId}}" } }
       ]
     },
     {
@@ -207,6 +210,85 @@
       "item": [
         { "name": "Account Summary", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/accounts/{{accountId}}/summary?startDate={{startDate}}&endDate={{endDate}}" } },
         { "name": "User Accounts Summary", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/users/{{userId}}/accounts-summary?startDate={{startDate}}&endDate={{endDate}}" } }
+      ]
+    },
+    {
+      "name": "Authorization regressions (test data only)",
+      "item": [
+        {
+          "name": "Missing JWT (401)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/accounts"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Foreign account (404)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/accounts/{{foreignAccountId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Foreign spent with own account cannot be deleted (404)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/spents/{{foreignSpentId}}?accountId={{accountId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Legacy removed (404)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{legacyBaseUrl}}/incomes-categories"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Expected 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
       ]
     }
   ]

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { assertSameUser, validateId } from '../http/identity.js';
 import AccountDao from '../dao/account.dao.js';
 import TransferDao from '../dao/transfers.dao.js';
 import { RequestTransferDTO } from '../dto/request/transfers/request-transfer.dto.js';
@@ -13,7 +13,13 @@ export class TransferService {
     private readonly accountDao: AccountDao
   ) {}
 
-  async create(data: RequestTransferDTO): Promise<BaseResponseTransferDTO> {
+  async create(data: RequestTransferDTO, userId: string): Promise<BaseResponseTransferDTO> {
+    assertSameUser(data.userId, userId);
+    const [from, to] = await Promise.all([
+      this.accountDao.requireOwned(data.accountId, userId),
+      this.accountDao.requireOwned(data.to, userId),
+    ]);
+    data = { ...data, userId, fromName: from.accountName, toName: to.accountName };
     this.validateCreateRequest(data);
 
     const document = TransferMapper.toModel(data);
@@ -21,71 +27,73 @@ export class TransferService {
     const transferId = transfer._id.toString();
 
     const [fromAccount, toAccount] = await Promise.all([
-      this.accountDao.addTransfer(data.accountId, transferId),
-      this.accountDao.addTransfer(data.to, transferId),
+      this.accountDao.addTransfer(data.accountId, transferId, userId),
+      this.accountDao.addTransfer(data.to, transferId, userId),
     ]);
 
     if (!fromAccount || !toAccount) {
       await Promise.all([
-        this.accountDao.removeTransfer(data.accountId, transferId),
-        this.accountDao.removeTransfer(data.to, transferId),
+        this.accountDao.removeTransfer(data.accountId, transferId, userId),
+        this.accountDao.removeTransfer(data.to, transferId, userId),
       ]);
-      await this.transferDao.deleteById(transferId);
-      throw AppError.notFound('Account not found.');
+      await transfer.deleteOne();
+      throw AppError.notFound('Resource not found.');
     }
 
     return TransferMapper.toDto(transfer);
   }
 
-  async getAll(): Promise<BaseResponseTransferDTO[]> {
-    const transfers = await this.transferDao.get();
+  async getAll(userId: string): Promise<BaseResponseTransferDTO[]> {
+    const transfers = await this.transferDao.get(userId);
 
     return transfers.map((transfer) => TransferMapper.toDto(transfer));
   }
 
-  async getByUser(userId: string): Promise<BaseResponseTransferDTO[]> {
-    this.validateObjectId(userId, 'User id is invalid.');
+  async getByUser(requestedUserId: string, userId: string): Promise<BaseResponseTransferDTO[]> {
+    assertSameUser(requestedUserId, userId);
 
     const transfers = await this.transferDao.getByUserId(userId);
 
     return transfers.map((transfer) => TransferMapper.toDto(transfer));
   }
 
-  async getByAccount(accountId: string): Promise<BaseResponseTransferDTO[]> {
+  async getByAccount(accountId: string, userId: string): Promise<BaseResponseTransferDTO[]> {
     this.validateObjectId(accountId, 'Account id is invalid.');
+    await this.accountDao.requireOwned(accountId, userId);
 
-    const transfers = await this.transferDao.getByAccount(accountId);
+    const transfers = await this.transferDao.getByAccount(accountId, userId);
 
     return transfers.map((transfer) => TransferMapper.toDto(transfer));
   }
 
   async getByDateRangeAndAccount(
-    request: RequestTransfersListDTO
+    request: RequestTransfersListDTO, userId: string
   ): Promise<BaseResponseTransferDTO[]> {
-    if (!request.startDate || !request.endDate) {
+    if (typeof request.startDate !== 'string' || !request.startDate || typeof request.endDate !== 'string' || !request.endDate) {
       throw AppError.validation('Date range is required.', {
         required: ['startDate', 'endDate'],
       });
     }
 
     this.validateObjectId(request.accountId, 'Account id is invalid.');
+    await this.accountDao.requireOwned(request.accountId, userId);
 
     const transfers = await this.transferDao.getByDateRangeAndAccount(
       request.startDate,
       request.endDate,
-      request.accountId
+      request.accountId, userId
     );
 
     return transfers.map((transfer) => TransferMapper.toDto(transfer));
   }
 
-  async getById(transferId: string): Promise<BaseResponseTransferDTO> {
+  async getById(transferId: string, userId: string): Promise<BaseResponseTransferDTO> {
     this.validateObjectId(transferId, 'Transfer id is invalid.');
 
-    const transfer = await this.transferDao.getById(transferId);
+    const transfer = await this.transferDao.getById(transferId, userId);
 
     if (!transfer) {
-      throw AppError.notFound('Transfer not found.');
+      throw AppError.notFound('Resource not found.');
     }
 
     return TransferMapper.toDto(transfer);
@@ -112,7 +120,7 @@ export class TransferService {
   }
 
   private validateObjectId(id: string, message: string) {
-    if (!mongoose.isValidObjectId(id)) {
+    try { validateId(id); } catch {
       throw AppError.validation(message);
     }
   }

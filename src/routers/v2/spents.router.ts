@@ -3,6 +3,7 @@ import SpentController from '../../controller/spent.controller.js';
 import AccountDao from '../../dao/account.dao.js';
 import IncomeDao from '../../dao/income.dao.js';
 import SpentDao from '../../dao/spent.dao.js';
+import SpentsCategoriesDao from '../../dao/spents.categories.dao.js';
 import TransferDao from '../../dao/transfers.dao.js';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
 import { AccountBalanceService } from '../../services/account-balance.service.js';
@@ -20,7 +21,7 @@ const accountBalanceService = new AccountBalanceService(
   incomeDao,
   transferDao
 );
-const spentService = new SpentService(spentDao, accountDao, accountBalanceService);
+const spentService = new SpentService(spentDao, accountDao, accountBalanceService, new SpentsCategoriesDao());
 const spentController = new SpentController(spentService);
 
 router.post('/spents', requireAuth, spentController.create);
