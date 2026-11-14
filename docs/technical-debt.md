@@ -1,5 +1,11 @@
 # Technical Debt
 
+## Authorization changes (REQ-01)
+
+The API v2 account DTO no longer exposes movement reference arrays and ownership checks do not trust them. Reads of movements and transfers are scoped by account ownership; unauthorized or orphaned references are excluded from results and aggregates rather than repaired. Review existing inconsistent data before deploying: visible totals can differ. Refer to [the authorization contract and test guide](req-01-authorization.md).
+
+Moving a movement between accounts remains blocked until reference consistency is addressed. Deleting an in-use personal spent category is also blocked to avoid creating new orphaned references. These guards do not replace transactions or data reconciliation.
+
 ## Account movement references
 
 The current data model stores movement relationships in two directions:

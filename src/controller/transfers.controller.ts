@@ -1,3 +1,4 @@
+import { authenticatedUserId } from '../http/identity.js';
 import { NextFunction, Request, Response } from 'express';
 import { RequestTransferDTO } from '../dto/request/transfers/request-transfer.dto.js';
 import { RequestTransfersListDTO } from '../dto/request/transfers/request-transfers-list.dto.js';
@@ -10,7 +11,7 @@ export default class TransferController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body as RequestTransferDTO;
-      const transfer = await this.transferService.create(data);
+      const transfer = await this.transferService.create(data, authenticatedUserId(req));
 
       return created(res, transfer, 'Successfully created transfer.');
     } catch (error) {
@@ -20,7 +21,7 @@ export default class TransferController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const transfers = await this.transferService.getAll();
+      const transfers = await this.transferService.getAll(authenticatedUserId(req));
 
       return ok(res, transfers);
     } catch (error) {
@@ -30,7 +31,7 @@ export default class TransferController {
 
   getByUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const transfers = await this.transferService.getByUser(req.params.id);
+      const transfers = await this.transferService.getByUser(req.params.id, authenticatedUserId(req));
 
       return ok(res, transfers);
     } catch (error) {
@@ -40,8 +41,8 @@ export default class TransferController {
 
   getByAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const accountId = (req.query.accountId as string) ?? req.params.id;
-      const transfers = await this.transferService.getByAccount(accountId);
+      const accountId = req.query.accountId as string;
+      const transfers = await this.transferService.getByAccount(accountId, authenticatedUserId(req));
 
       return ok(res, transfers);
     } catch (error) {
@@ -52,11 +53,11 @@ export default class TransferController {
   getByDateRange = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data: RequestTransfersListDTO = {
-        accountId: (req.query.accountId as string) ?? req.params.id,
+        accountId: req.query.accountId as string,
         startDate: req.query.startDate as string,
         endDate: req.query.endDate as string,
       };
-      const transfers = await this.transferService.getByDateRangeAndAccount(data);
+      const transfers = await this.transferService.getByDateRangeAndAccount(data, authenticatedUserId(req));
 
       return ok(res, transfers);
     } catch (error) {
@@ -66,7 +67,7 @@ export default class TransferController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const transfer = await this.transferService.getById(req.params.id);
+      const transfer = await this.transferService.getById(req.params.id, authenticatedUserId(req));
 
       return ok(res, transfer);
     } catch (error) {

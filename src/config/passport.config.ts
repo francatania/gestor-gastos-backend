@@ -5,6 +5,7 @@ import {
   VerifyCallback,
 } from 'passport-jwt';
 import config from '../config/config.js';
+import { validateId } from '../http/identity.js';
 
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -15,7 +16,13 @@ export const init = () => {
   passport.use(
     'jwt',
     new JWTStrategy(opts, (payload: unknown, done: VerifyCallback) => {
-      return done(null, payload);
+      try {
+        if (!payload || typeof payload !== 'object' || !('_id' in payload)) return done(null, false);
+        validateId(payload._id);
+        return done(null, { _id: payload._id.toLowerCase() });
+      } catch {
+        return done(null, false);
+      }
     }) as unknown as passport.Strategy
   );
 };

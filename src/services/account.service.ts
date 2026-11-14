@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { assertSameUser, validateId } from '../http/identity.js';
 import AccountDao from '../dao/account.dao.js';
 import { RequestAccountDTO } from '../dto/request/request-account.dto.js';
 import { ResponseAccountDTO } from '../dto/response/account-created.js';
@@ -8,7 +8,9 @@ import { AccountMapper } from '../mappers/account.mapper.js';
 export class AccountService {
   constructor(private readonly accountDao: AccountDao) {}
 
-  async create(data: RequestAccountDTO): Promise<ResponseAccountDTO> {
+  async create(data: RequestAccountDTO, userId: string): Promise<ResponseAccountDTO> {
+    assertSameUser(data.userId, userId);
+    data = { accountName: data.accountName, userId };
     this.validateRequest(data);
 
     const account = await this.accountDao.getByName(data.accountName, data.userId);
@@ -22,38 +24,38 @@ export class AccountService {
     return AccountMapper.toDto(createdAccount);
   }
 
-  async getById(id: string): Promise<ResponseAccountDTO> {
+  async getById(id: string, userId: string): Promise<ResponseAccountDTO> {
     this.validateObjectId(id, 'Account id is invalid.');
 
-    const account = await this.accountDao.getById(id);
+    const account = await this.accountDao.getById(id, userId);
 
     if (!account) {
-      throw AppError.notFound('Account not found.');
+      throw AppError.notFound('Resource not found.');
     }
 
     return AccountMapper.toDto(account);
   }
 
-  async getByUserId(userId: string): Promise<ResponseAccountDTO[]> {
-    this.validateObjectId(userId, 'User id is invalid.');
+  async getByUserId(requestedUserId: string, userId: string): Promise<ResponseAccountDTO[]> {
+    assertSameUser(requestedUserId, userId);
 
     const accounts = await this.accountDao.getByUserId(userId);
 
     return accounts.map(AccountMapper.toDto);
   }
 
-  async deleteById(id: string): Promise<void> {
+  async deleteById(id: string, userId: string): Promise<void> {
     this.validateObjectId(id, 'Account id is invalid.');
 
-    const result = await this.accountDao.deleteById(id);
+    const result = await this.accountDao.deleteById(id, userId);
 
     if (result.deletedCount === 0) {
-      throw AppError.notFound('Account not found.');
+      throw AppError.notFound('Resource not found.');
     }
   }
 
   private validateRequest(data: RequestAccountDTO) {
-    if (!data.accountName || !data.userId) {
+    if (typeof data.accountName !== 'string' || !data.accountName.trim() || !data.userId) {
       throw AppError.validation('All fields are required.', {
         required: ['accountName', 'userId'],
       });
@@ -63,7 +65,7 @@ export class AccountService {
   }
 
   private validateObjectId(id: string, message: string) {
-    if (!mongoose.isValidObjectId(id)) {
+    try { validateId(id); } catch {
       throw AppError.validation(message);
     }
   }

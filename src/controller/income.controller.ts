@@ -1,3 +1,4 @@
+import { authenticatedUserId } from '../http/identity.js';
 import { NextFunction, Request, Response } from 'express';
 import {
   RequestIncomeDTO,
@@ -13,7 +14,7 @@ export default class IncomeController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body as RequestIncomeDTO;
-      const income = await this.incomeService.create(data);
+      const income = await this.incomeService.create(data, authenticatedUserId(req));
 
       return created(res, income, 'Successfully created income.');
     } catch (error) {
@@ -23,8 +24,8 @@ export default class IncomeController {
 
   getByAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const accountId = (req.query.accountId as string) ?? req.params.id;
-      const incomes = await this.incomeService.getByAccount(accountId);
+      const accountId = req.query.accountId as string;
+      const incomes = await this.incomeService.getByAccount(accountId, authenticatedUserId(req));
 
       return ok(res, incomes);
     } catch (error) {
@@ -35,11 +36,11 @@ export default class IncomeController {
   getByDateRange = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data: RequestIncomesListDTO = {
-        accountId: (req.query.accountId as string) ?? req.params.id,
+        accountId: req.query.accountId as string,
         startDate: req.query.startDate as string,
         endDate: req.query.endDate as string,
       };
-      const incomes = await this.incomeService.getByDateRangeAndAccount(data);
+      const incomes = await this.incomeService.getByDateRangeAndAccount(data, authenticatedUserId(req));
 
       return ok(res, incomes);
     } catch (error) {
@@ -49,7 +50,7 @@ export default class IncomeController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const income = await this.incomeService.getById(req.params.id);
+      const income = await this.incomeService.getById(req.params.id, authenticatedUserId(req));
 
       return ok(res, income);
     } catch (error) {
@@ -60,7 +61,7 @@ export default class IncomeController {
   updateById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body as RequestUpdateIncomeDTO;
-      const income = await this.incomeService.updateById(req.params.id, data);
+      const income = await this.incomeService.updateById(req.params.id, data, authenticatedUserId(req));
 
       return ok(res, income, 'Successfully updated income.');
     } catch (error) {
@@ -71,7 +72,7 @@ export default class IncomeController {
   deleteById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const accountId = req.query.accountId as string;
-      await this.incomeService.deleteById(req.params.id, accountId);
+      await this.incomeService.deleteById(req.params.id, accountId, authenticatedUserId(req));
 
       return noContent(res);
     } catch (error) {

@@ -1,3 +1,4 @@
+import { authenticatedUserId } from '../http/identity.js';
 import { NextFunction, Request, Response } from 'express';
 import { RequestCategoryDTO } from '../dto/request/categories/request-category.dto.js';
 import { created, noContent, ok } from '../http/responses.js';
@@ -9,7 +10,7 @@ export default class IncomesCategoriesController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body as RequestCategoryDTO;
-      const category = await this.categoriesService.create(data);
+      const category = await this.categoriesService.create(data, authenticatedUserId(req));
 
       return created(res, category, 'Successfully created category.');
     } catch (error) {
@@ -19,7 +20,7 @@ export default class IncomesCategoriesController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const categories = await this.categoriesService.getAll();
+      const categories = await this.categoriesService.getAll(authenticatedUserId(req));
 
       return ok(res, categories);
     } catch (error) {
@@ -29,7 +30,7 @@ export default class IncomesCategoriesController {
 
   deleteById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await this.categoriesService.deleteById(req.params.id);
+      await this.categoriesService.deleteById(req.params.id, authenticatedUserId(req));
 
       return noContent(res);
     } catch (error) {

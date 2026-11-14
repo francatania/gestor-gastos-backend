@@ -10,9 +10,6 @@ export class AccountMapper {
     return {
         id: account._id.toString(),
         accountName: account.accountName,
-        incomes: account.incomes.map(i => i.toString()),
-        spents: account.spents.map(i => i.toString()),
-        transfers: account.transfers.map(i => i.toString()),
         createdAt: account.createdAt.toISOString(),
         updatedAt: account.updatedAt.toISOString()
 

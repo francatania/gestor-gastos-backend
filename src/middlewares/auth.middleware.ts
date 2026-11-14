@@ -16,7 +16,7 @@ export const requireAuth = (
       return next(AppError.unauthorized());
     }
 
-    req.user = user;
+    req.user = user as Express.User;
     return next();
   })(req, res, next);
 };

@@ -1,3 +1,4 @@
+import { authenticatedUserId } from '../http/identity.js';
 import { NextFunction, Request, Response } from 'express';
 import { RequestSpentDTO, RequestUpdateSpentDTO } from '../dto/request/spents/request-spent.dto.js';
 import { RequestSpentsListDTO } from '../dto/request/spents/request-spents-list.dto.js';
@@ -10,7 +11,7 @@ export default class SpentController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body as RequestSpentDTO;
-      const spent = await this.spentService.create(data);
+      const spent = await this.spentService.create(data, authenticatedUserId(req));
 
       return created(res, spent, 'Successfully created spent.');
     } catch (error) {
@@ -20,8 +21,8 @@ export default class SpentController {
 
   getByAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const accountId = (req.query.accountId as string) ?? req.params.id;
-      const spents = await this.spentService.getByAccount(accountId);
+      const accountId = req.query.accountId as string;
+      const spents = await this.spentService.getByAccount(accountId, authenticatedUserId(req));
 
       return ok(res, spents);
     } catch (error) {
@@ -32,11 +33,11 @@ export default class SpentController {
   getByDateRange = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data: RequestSpentsListDTO = {
-        accountId: (req.query.accountId as string) ?? req.params.id,
+        accountId: req.query.accountId as string,
         startDate: req.query.startDate as string,
         endDate: req.query.endDate as string,
       };
-      const spents = await this.spentService.getByDateRangeAndAccount(data);
+      const spents = await this.spentService.getByDateRangeAndAccount(data, authenticatedUserId(req));
 
       return ok(res, spents);
     } catch (error) {
@@ -46,7 +47,7 @@ export default class SpentController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const spent = await this.spentService.getById(req.params.id);
+      const spent = await this.spentService.getById(req.params.id, authenticatedUserId(req));
 
       return ok(res, spent);
     } catch (error) {
@@ -57,7 +58,7 @@ export default class SpentController {
   updateById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body as RequestUpdateSpentDTO;
-      const spent = await this.spentService.updateById(req.params.id, data);
+      const spent = await this.spentService.updateById(req.params.id, data, authenticatedUserId(req));
 
       return ok(res, spent, 'Successfully updated spent.');
     } catch (error) {
@@ -68,7 +69,7 @@ export default class SpentController {
   deleteById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const accountId = req.query.accountId as string;
-      await this.spentService.deleteById(req.params.id, accountId);
+      await this.spentService.deleteById(req.params.id, accountId, authenticatedUserId(req));
 
       return noContent(res);
     } catch (error) {

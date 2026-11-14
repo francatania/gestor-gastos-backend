@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { assertSameUser, validateId } from '../http/identity.js';
 import AccountDao from '../dao/account.dao.js';
 import IncomeDao from '../dao/income.dao.js';
 import SpentDao from '../dao/spent.dao.js';
@@ -7,7 +7,6 @@ import {
   AccountSummaryDTO,
   CategoryChartAmountDTO,
   CompactAccountSummaryDTO,
-  CurrentBalanceDTO,
   MonthChartAmountDTO,
   PeriodTotalsDTO,
 } from '../dto/response/dashboard/response-dashboard-summary.dto.js';
@@ -34,15 +33,15 @@ export class DashboardService {
 
   async getAccountSummary(
     accountId: string,
-    range: DateRange
+    range: DateRange, userId: string
   ): Promise<AccountSummaryDTO> {
     this.validateObjectId(accountId, 'Account id is invalid.');
     this.validateDateRange(range);
 
-    const account = await this.accountDao.getById(accountId);
+    const account = await this.accountDao.getById(accountId, userId);
 
     if (!account) {
-      throw AppError.notFound('Account not found.');
+      throw AppError.notFound('Resource not found.');
     }
 
     const [
@@ -50,12 +49,12 @@ export class DashboardService {
       periodIncomes,
       periodTransfers,
     ] = await Promise.all([
-      this.spentDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
-      this.incomeDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
-      this.transferDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
+      this.spentDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId, userId),
+      this.incomeDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId, userId),
+      this.transferDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId, userId),
     ]);
 
-    const currentBalance = await this.accountBalanceService.getCurrentBalance(accountId);
+    const currentBalance = await this.accountBalanceService.getCurrentBalance(accountId, userId);
     const periodTotals = this.buildPeriodTotals(
       accountId,
       periodIncomes,
@@ -81,10 +80,10 @@ export class DashboardService {
   }
 
   async getUserAccountsSummary(
-    userId: string,
-    range: DateRange
+    requestedUserId: string,
+    range: DateRange, userId: string
   ): Promise<CompactAccountSummaryDTO[]> {
-    this.validateObjectId(userId, 'User id is invalid.');
+    assertSameUser(requestedUserId, userId);
     this.validateDateRange(range);
 
     const accounts = await this.accountDao.getByUserId(userId);
@@ -97,12 +96,12 @@ export class DashboardService {
           periodIncomes,
           periodTransfers,
         ] = await Promise.all([
-          this.spentDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
-          this.incomeDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
-          this.transferDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId),
+          this.spentDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId, userId),
+          this.incomeDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId, userId),
+          this.transferDao.getByDateRangeAndAccount(range.startDate, range.endDate, accountId, userId),
         ]);
 
-        const currentBalance = await this.accountBalanceService.getCurrentBalance(accountId);
+        const currentBalance = await this.accountBalanceService.getCurrentBalance(accountId, userId);
         const periodTotals = this.buildPeriodTotals(
           accountId,
           periodIncomes,
@@ -144,11 +143,11 @@ export class DashboardService {
   private calculateTransferTotals(accountId: string, transfers: TransferLean[]) {
     return transfers.reduce(
       (totals, transfer) => {
-        if (this.getRefId(transfer.accountId) === accountId) {
+        if (this.getRefId(transfer.accountId) === accountId.toLowerCase()) {
           totals.outgoingTransfers += transfer.amount;
         }
 
-        if (this.getRefId(transfer.to) === accountId) {
+        if (this.getRefId(transfer.to) === accountId.toLowerCase()) {
           totals.incomingTransfers += transfer.amount;
         }
 
@@ -235,7 +234,7 @@ export class DashboardService {
   }
 
   private validateDateRange(range: DateRange) {
-    if (!range.startDate || !range.endDate) {
+    if (typeof range.startDate !== 'string' || !range.startDate || typeof range.endDate !== 'string' || !range.endDate) {
       throw AppError.validation('Date range is required.', {
         required: ['startDate', 'endDate'],
       });
@@ -243,7 +242,7 @@ export class DashboardService {
   }
 
   private validateObjectId(id: string, message: string) {
-    if (!mongoose.isValidObjectId(id)) {
+    try { validateId(id); } catch {
       throw AppError.validation(message);
     }
   }
